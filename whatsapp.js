@@ -1,0 +1,94 @@
+/* ============================================================
+   whatsapp.js
+   PUNTO DE ENTRADA ÚNICO del sistema.
+   Arranca todo: WhatsApp, servidor, scheduler.
+   Solo acumula mensajes — no llama a la IA en tiempo real.
+   ============================================================ */
+
+import qrcode from 'qrcode-terminal';
+import { createClient } from '@supabase/supabase-js';
+import * as dotenv from 'dotenv';
+import { client } from './client.js';
+import { arrancarServidor, iniciarScheduler } from './server.js';
+dotenv.config();
+
+const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
+
+/* ── HISTORIAL ── */
+
+async function cargarHistorial(chatId) {
+    try {
+        const { data } = await supabase
+            .from('historial_chats')
+            .select('mensajes')
+            .eq('chat_id', chatId)
+            .single();
+        return data?.mensajes || [];
+    } catch { return []; }
+}
+
+async function guardarHistorial(chatId, telefono, mensajes) {
+    await supabase
+        .from('historial_chats')
+        .upsert({ chat_id: chatId, telefono, mensajes, actualizado_at: new Date() });
+}
+
+/* ── ACUMULADOR DE MENSAJES ── */
+
+async function procesarMensaje(msg) {
+    try {
+        const chat = await msg.getChat();
+        if (chat.isGroup) return;
+        if (!msg.body || msg.body.trim() === '') return;
+
+        const chatId = msg.fromMe ? msg.to : msg.from;
+        const telefono = chatId.replace(/@c\.us$/, '').replace(/@s\.whatsapp\.net$/, '');
+        const rol = msg.fromMe ? 'Empleado' : 'Cliente';
+        const texto = `${rol}: ${msg.body}`;
+
+        console.log(`\n📩 [${telefono}] ${texto}`);
+
+        const mensajes = await cargarHistorial(chatId);
+        mensajes.push(texto);
+        await guardarHistorial(chatId, telefono, mensajes);
+
+        console.log(`   ✅ Acumulado (${mensajes.length} mensajes)`);
+    } catch (e) {
+        console.error('❌ Error acumulando:', e.message);
+    }
+}
+
+/* ── EVENTOS ── */
+
+client.on('qr', (qr) => {
+    /* El QR también lo mostramos en consola como fallback */
+    console.log('\n📱 QR disponible en http://localhost:3000/dashboard.html');
+    qrcode.generate(qr, { small: true });
+});
+
+client.on('ready', () => {
+    console.log('✅ [Bot] Acumulador activo — esperando mensajes');
+});
+
+/* message = entrantes del cliente */
+client.on('message', async (msg) => {
+    await procesarMensaje(msg);
+});
+
+/* message_create = mensajes que manda el empleado desde el celular */
+client.on('message_create', async (msg) => {
+    if (!msg.fromMe) return;
+    await procesarMensaje(msg);
+});
+
+/* ── ARRANQUE ── */
+
+console.log('\n🛠️  Iniciando Bot BP...');
+
+client.initialize();
+arrancarServidor();
+iniciarScheduler();
+
+/* Capturamos crashes para que no tire todo abajo */
+process.on('uncaughtException', (e) => console.error('🔥 [Crash evitado]:', e.message));
+process.on('unhandledRejection', (r) => console.error('🔥 [Promise rechazada]:', r));
