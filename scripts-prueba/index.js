@@ -1,4 +1,4 @@
-import { procesarPedidoDesdeChat } from './procesador.js';
+import { procesarPedidoDesdeChat } from '../procesador.js';
 
 /**
  * index.js - Punto de entrada del Bot BP
@@ -16,12 +16,12 @@ const TELEFONO_PRUEBA = "549343555666";
 
 async function iniciarApp() {
     console.log("=== Bot BP - Sistema de Extracción de Pedidos ===");
-    
+
     // Simulación de detección de mensaje de WhatsApp
     console.log("Simulando recepción de chat...");
-    
+
     const resultado = await procesarPedidoDesdeChat(TELEFONO_PRUEBA, CHAT_PRUEBA);
-    
+
     if (resultado.success) {
         if (resultado.cerrado) {
             console.log("\nResultado final: Pedido PROCESADO y GUARDADO.");

@@ -1,0 +1,294 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Big Pizza-PARANA — Dashboard</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+  <script src="auth.js"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+  <link rel="stylesheet" href="dashboard.css">
+</head>
+
+<body>
+
+  <header>
+    <div class="logo">Big<span> Pizza-PARANÁ</span></div>
+    <div class="header-right">
+      <div class="estado-server">
+        <div class="dot" id="serverDot"></div>
+        <span id="serverEstado">Conectando...</span>
+      </div>
+      <div class="last-update" id="lastUpdate">—</div>
+      <div class="user-info">
+        <span class="user-email" id="userEmail"></span>
+        <button class="btn-ghost btn-sm" id="btnLogout" onclick="cerrarSesion()">Salir →</button>
+      </div>
+    </div>
+  </header>
+
+  <div class="tabs">
+    <button class="tab active" onclick="cambiarTab('metricas',this)"> Métricas</button>
+    <button class="tab" onclick="cambiarTab('whatsapp',this)"> WhatsApp</button>
+    <button class="tab" onclick="cambiarTab('turnos',this)"> Turnos</button>
+    <button class="tab" onclick="cambiarTab('remarketing',this)"> Remarketing</button>
+  </div>
+
+  <div class="filters" id="filters">
+    <button class="filter-btn active" onclick="setFiltro('hoy',this)">Hoy</button>
+    <button class="filter-btn" onclick="setFiltro('semana',this)">Esta semana</button>
+    <button class="filter-btn" onclick="setFiltro('mes',this)">Este mes</button>
+    <button class="filter-btn" onclick="setFiltro('todo',this)">Todo</button>
+  </div>
+
+  <main>
+
+    <!-- MÉTRICAS -->
+    <div class="page active" id="page-metricas">
+      <div class="kpis">
+        <div class="kpi">
+          <div class="kpi-label">Ventas totales</div>
+          <div class="kpi-value highlight" id="kpiVentas">—</div>
+          <div class="kpi-sub" id="kpiVentasSub"></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Pedidos</div>
+          <div class="kpi-value" id="kpiPedidos">—</div>
+          <div class="kpi-sub">registrados</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Ticket promedio</div>
+          <div class="kpi-value" id="kpiTicket">—</div>
+          <div class="kpi-sub">por pedido</div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Clientes únicos</div>
+          <div class="kpi-value" id="kpiClientes">—</div>
+          <div class="kpi-sub" id="kpiClientesSub"></div>
+        </div>
+        <div class="kpi">
+          <div class="kpi-label">Hora pico</div>
+          <div class="kpi-value" id="kpiHora">—</div>
+          <div class="kpi-sub">más pedidos</div>
+        </div>
+      </div>
+      <div class="charts">
+        <div class="card">
+          <div class="card-title">Ventas por día</div>
+          <div class="chart-wrap"><canvas id="chartVentas"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Productos más pedidos</div>
+          <div class="chart-wrap"><canvas id="chartProductos"></canvas></div>
+        </div>
+      </div>
+      <div class="charts-row2">
+        <div class="card">
+          <div class="card-title">Pedidos por hora</div>
+          <div class="chart-wrap"><canvas id="chartHoras"></canvas></div>
+        </div>
+        <div class="card">
+          <div class="card-title">Clientes frecuentes</div>
+          <div class="table-wrap" id="tablaClientes">
+            <div class="loading">
+              <div class="spinner"></div> Cargando...
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- WHATSAPP QR -->
+    <div class="page" id="page-whatsapp">
+      <div class="qr-section">
+        <div class="qr-titulo">Vincular WhatsApp</div>
+        <div class="qr-desc">Abrí WhatsApp en el celular de la pizzería →<br><strong>Dispositivos vinculados → Vincular
+            dispositivo</strong><br>y escaneá el código de abajo.</div>
+        <div id="qrArea">
+          <div class="loading">
+            <div class="spinner"></div> Esperando QR...
+          </div>
+        </div>
+        <div style="margin-top:16px"><button class="btn-ghost" onclick="cargarQR()">🔄 Actualizar QR</button></div>
+      </div>
+    </div>
+
+    <!-- TURNOS -->
+    <div class="page" id="page-turnos">
+      <div class="procesar-ahora-card">
+        <div class="procesar-info">
+          <div class="procesar-titulo">⚡ Procesar ahora</div>
+          <div class="procesar-desc">Procesa todas las conversaciones acumuladas. La IA descarta automáticamente las que
+            no sean pedidos.</div>
+        </div>
+        <button class="btn-yellow" id="btnProcesarAhora" onclick="procesarAhora()">Procesar ahora</button>
+      </div>
+      <div class="resultado-proceso" id="resultadoProceso">
+        <div class="resultado-titulo">Último procesamiento</div>
+        <div class="resultado-grid">
+          <div class="resultado-item">
+            <div class="resultado-num" id="resTotal" style="color:var(--text)">—</div>
+            <div class="resultado-label">Analizadas</div>
+          </div>
+          <div class="resultado-item">
+            <div class="resultado-num" id="resPedidos" style="color:var(--green)">—</div>
+            <div class="resultado-label">Pedidos guardados</div>
+          </div>
+          <div class="resultado-item">
+            <div class="resultado-num" id="resDescartados" style="color:var(--muted)">—</div>
+            <div class="resultado-label">Descartados</div>
+          </div>
+          <div class="resultado-item">
+            <div class="resultado-num" id="resErrores" style="color:var(--red)">—</div>
+            <div class="resultado-label">Errores</div>
+          </div>
+        </div>
+      </div>
+      <div class="turnos-layout">
+        <div class="turno-card">
+          <div class="turno-card-title">🌅 Turno 1</div>
+          <div class="turno-field"><label>Hora de cierre</label><input type="time" id="turno1Input" value="12:00" />
+          </div>
+          <div class="rm-hint">Se procesarán todas las conversaciones a esta hora.</div>
+          <button class="btn" onclick="guardarTurnos()">Guardar horarios</button>
+          <div id="turnosFeedback" style="display:none"></div>
+        </div>
+        <div class="turno-card">
+          <div class="turno-card-title">🌙 Turno 2</div>
+          <div class="turno-field"><label>Hora de cierre</label><input type="time" id="turno2Input" value="23:00" />
+          </div>
+          <div class="rm-hint">Se procesarán todas las conversaciones a esta hora.</div>
+        </div>
+      </div>
+      <div class="card">
+        <div class="card-title">Historial de turnos</div>
+        <div id="logsTurnos">
+          <div class="loading">
+            <div class="spinner"></div> Cargando...
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- REMARKETING -->
+    <div class="page" id="page-remarketing">
+      <div class="remarketing-layout">
+
+        <!-- Panel Izquierdo: Configuración de Campaña -->
+        <div class="rm-panel">
+          <div class="rm-panel-title">📣 Campaña</div>
+
+          <div class="rm-alerta" id="rmAlerta" style="display:none">⚠️ WhatsApp no conectado.<br>Vinculá el dispositivo
+            en la tab <strong>WhatsApp</strong>.</div>
+
+          <!-- Segmento -->
+          <div class="rm-field">
+            <label>Segmento objetivo</label>
+            <div class="rm-filtros">
+              <label class="rm-filtro-chip selected" id="chip-todos" onclick="seleccionarFiltroChip('todos')">
+                <input type="radio" name="rmFiltroEstadoRadio" value="todos" checked>
+                <span class="rm-filtro-dot"></span>
+                Todos los vencidos
+              </label>
+              <label class="rm-filtro-chip" id="chip-nunca" onclick="seleccionarFiltroChip('nunca')">
+                <input type="radio" name="rmFiltroEstadoRadio" value="nunca">
+                <span class="rm-filtro-dot"></span>
+                Nunca recibieron remarketing
+              </label>
+              <label class="rm-filtro-chip" id="chip-recibieron" onclick="seleccionarFiltroChip('recibieron')">
+                <input type="radio" name="rmFiltroEstadoRadio" value="recibieron">
+                <span class="rm-filtro-dot"></span>
+                Ya recibieron campaña previa
+              </label>
+            </div>
+          </div>
+
+          <hr class="rm-divider">
+
+          <!-- Días y contador -->
+          <div class="rm-field">
+            <label>Días sin comprar</label>
+            <input type="number" id="rmDias" value="30" min="1" max="365" oninput="actualizarVencidos()" />
+            <div class="rm-hint">Clientes inactivos hace más de <strong id="rmDiasLabel">30</strong> días.</div>
+          </div>
+          <div class="rm-counter">
+            <strong id="rmContador">0</strong>
+            <span>clientes<br>para contactar</span>
+          </div>
+
+          <hr class="rm-divider">
+
+          <!-- Mensaje -->
+          <div class="rm-field">
+            <label>Mensaje</label>
+            <textarea id="rmMensaje" placeholder="Hola {nombre}, hace tiempo que no te vemos! 🍕"
+              oninput="actualizarPreview()"></textarea>
+            <div class="rm-hint">Usá <code>{nombre}</code> para personalizar el saludo.</div>
+          </div>
+          <div class="rm-field">
+            <label>Vista previa</label>
+            <div class="rm-preview" id="rmPreview">Escribí el mensaje arriba...</div>
+          </div>
+
+          <hr class="rm-divider">
+
+          <!-- Envío -->
+          <div id="rmFeedback" style="display:none"></div>
+          <div class="rm-progreso" id="rmProgreso">
+            <div id="rmProgresoTexto">Enviando...</div>
+            <div class="rm-progreso-bar-wrap">
+              <div class="rm-progreso-bar" id="rmProgresoBar"></div>
+            </div>
+            <div class="rm-progreso-texto" id="rmProgresoDetalle"></div>
+          </div>
+          <div class="rm-actions">
+            <button class="btn-green" id="btnEnviarTodos" onclick="enviarTodos()" style="width:100%;">📤 Enviar a
+              todos</button>
+          </div>
+        </div>
+
+        <!-- Panel Derecho: Lista de Clientes -->
+        <div>
+          <div class="vencidos-header">
+            <div class="vencidos-titulo" id="vencidosTitulo">Clientes sin comprar</div>
+            <button class="btn-ghost" style="padding:4px 12px;font-size:0.8rem;white-space:nowrap"
+              onclick="actualizarVencidos()">🔄 Refrescar</button>
+          </div>
+          <div id="listaVencidos">
+            <div class="loading">
+              <div class="spinner"></div> Cargando...
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </main>
+
+  <!-- Modal -->
+  <div class="modal-overlay" id="customModal">
+    <div class="modal-box">
+      <div class="modal-icon" id="modalIcon">⚠️</div>
+      <div class="modal-title" id="modalTitle">Atención</div>
+      <div class="modal-desc" id="modalDesc">...</div>
+      <div class="modal-actions">
+        <button class="btn-ghost" id="modalBtnCancel">Cancelar</button>
+        <button class="modal-btn-red" id="modalBtnConfirm">Sí, enviar</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="dashboard.js"></script>
+
+  <footer class="footer">
+    <p>Created and designed by <a href="https://www.linkedin.com/in/pablo-mari%C3%B1o-785138236/" target="_blank"
+        rel="noopener noreferrer">Pablo Mariño</a></p>
+  </footer>
+
+</body>
+
+</html>

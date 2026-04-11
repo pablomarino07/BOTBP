@@ -37,6 +37,13 @@ async function guardarHistorial(chatId, telefono, mensajes) {
 
 async function procesarMensaje(msg) {
     try {
+        /* Ignoramos los estados de WhatsApp para que no rompa el getChat ni se acumulen */
+        if (msg.from === 'status@broadcast' || msg.to === 'status@broadcast') return;
+        
+        /* Ignoramos los canales / newsletters de WhatsApp */
+        const isChannel = msg.from?.includes('@newsletter') || msg.to?.includes('@newsletter');
+        if (isChannel) return;
+
         const chat = await msg.getChat();
         if (chat.isGroup) return;
         if (!msg.body || msg.body.trim() === '') return;
@@ -48,13 +55,15 @@ async function procesarMensaje(msg) {
 
         console.log(`\n📩 [${telefono}] ${texto}`);
 
-        const mensajes = await cargarHistorial(chatId);
-        mensajes.push(texto);
-        await guardarHistorial(chatId, telefono, mensajes);
+        const mensajes = await cargarHistorial(chatId);  /* leo el historial de whatsapp*/
+        mensajes.push(texto);  /* agrego el mensaje al historial*/
+        await guardarHistorial(chatId, telefono, mensajes);  /* guardo el historial de whatsapp*/
 
         console.log(`   ✅ Acumulado (${mensajes.length} mensajes)`);
     } catch (e) {
-        console.error('❌ Error acumulando:', e.message);
+        /* Si falla porque es un canal/newsletter interno de WP, lo ignoramos en silencio */
+        if (e.stack && e.stack.includes('Channel.')) return;
+        console.error('❌ Error acumulando:', e.stack);
     }
 }
 

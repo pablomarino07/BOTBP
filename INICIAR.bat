@@ -70,11 +70,12 @@ echo.
 echo    Para vincular WhatsApp, ir a la
 echo    tab "WhatsApp" en el dashboard.
 echo.
+echo    Mostrando solo logs importantes.
 echo    NO cierres esta ventana.
 echo  ============================================
 echo.
 
-node whatsapp.js
+node src/whatsapp.js
 
 echo.
 echo  [!] El bot se detuvo.

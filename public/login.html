@@ -1,0 +1,400 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Big Pizza-PARANÁ — Acceso</title>
+  <meta name="description" content="Acceso al panel de control de Big Pizza-PARANÁ">
+
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap"
+    rel="stylesheet">
+
+  <!-- auth.js define las funciones de login -->
+  <script src="auth.js"></script>
+
+  <style>
+    :root {
+      --bg: #1a1814;
+      --surface: #211f1a;
+      --surface2: #27251f;
+      --border: #2e2c26;
+      --orange: #f5631a;
+      --orange-dim: #f5631a18;
+      --text: #f0ede6;
+      --muted: #7a7568;
+      --red: #ef4444;
+      --green: #22c55e;
+    }
+
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'DM Sans', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      position: relative;
+      overflow: hidden;
+    }
+
+    /* Glow de fondo */
+    body::before {
+      content: '';
+      position: fixed;
+      top: -10%;
+      left: 50%;
+      transform: translateX(-50%);
+      width: 700px;
+      height: 700px;
+      background: radial-gradient(circle, rgba(245, 99, 26, 0.07) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    body::after {
+      content: '';
+      position: fixed;
+      bottom: -15%;
+      right: -10%;
+      width: 500px;
+      height: 500px;
+      background: radial-gradient(circle, rgba(245, 99, 26, 0.04) 0%, transparent 65%);
+      pointer-events: none;
+      z-index: 0;
+    }
+
+    /* ── Wrapper ── */
+    .login-wrap {
+      width: 100%;
+      max-width: 420px;
+      padding: 20px;
+      position: relative;
+      z-index: 1;
+      animation: fadeUp 0.4s cubic-bezier(0.22, 1, 0.36, 1) both;
+    }
+
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(28px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Logo ── */
+    .login-logo {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 3.2rem;
+      letter-spacing: .12em;
+      color: var(--orange);
+      text-align: center;
+      margin-bottom: 2px;
+      line-height: 1;
+    }
+    .login-logo span { color: var(--text); }
+
+    .login-subtitle {
+      text-align: center;
+      font-size: .65rem;
+      text-transform: uppercase;
+      letter-spacing: .25em;
+      color: var(--muted);
+      margin-bottom: 36px;
+    }
+
+    /* ── Card ── */
+    .login-card {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      border-radius: 16px;
+      padding: 36px 36px 32px;
+      box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,99,26,0.04);
+    }
+
+    .card-title {
+      font-family: 'Bebas Neue', sans-serif;
+      font-size: 1.5rem;
+      letter-spacing: .06em;
+      color: var(--text);
+      margin-bottom: 28px;
+    }
+
+    /* ── Campos ── */
+    .field { margin-bottom: 18px; }
+
+    .field label {
+      display: block;
+      font-size: .68rem;
+      text-transform: uppercase;
+      letter-spacing: .1em;
+      color: var(--muted);
+      margin-bottom: 8px;
+    }
+
+    .field input {
+      width: 100%;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      color: var(--text);
+      padding: 11px 14px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .92rem;
+      transition: border-color .15s, box-shadow .15s;
+      outline: none;
+    }
+    .field input:focus {
+      border-color: var(--orange);
+      box-shadow: 0 0 0 3px rgba(245,99,26,0.12);
+    }
+    .field input::placeholder { color: var(--muted); opacity: 0.45; }
+
+    /* ── Contraseña con toggle ── */
+    .password-wrap { position: relative; }
+    .password-wrap input { padding-right: 46px; }
+
+    .btn-show-pass {
+      position: absolute;
+      right: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--muted);
+      cursor: pointer;
+      font-size: .95rem;
+      padding: 4px 6px;
+      line-height: 1;
+      transition: color .15s;
+    }
+    .btn-show-pass:hover { color: var(--text); }
+
+    /* ── Error ── */
+    .login-error {
+      display: none;
+      background: rgba(239,68,68,0.1);
+      border: 1px solid rgba(239,68,68,0.25);
+      color: var(--red);
+      font-size: .82rem;
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-bottom: 18px;
+      line-height: 1.4;
+      animation: fadeIn .2s ease;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(-4px); }
+      to   { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ── Botón principal ── */
+    .btn-login {
+      width: 100%;
+      background: var(--orange);
+      color: #fff;
+      border: none;
+      padding: 12px;
+      border-radius: 8px;
+      font-family: 'DM Sans', sans-serif;
+      font-size: .93rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: opacity .15s, transform .1s;
+      margin-top: 6px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+    }
+    .btn-login:hover:not(:disabled) { opacity: .88; }
+    .btn-login:active:not(:disabled) { transform: scale(.99); }
+    .btn-login:disabled { opacity: .55; cursor: not-allowed; }
+
+    .btn-loader {
+      display: none;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.3);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin .7s linear infinite;
+    }
+    .btn-login.loading .btn-loader { display: block; }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* ── Nota de acceso ── */
+    .access-note {
+      margin-top: 20px;
+      padding-top: 20px;
+      border-top: 1px solid var(--border);
+      font-size: .74rem;
+      color: var(--muted);
+      text-align: center;
+      line-height: 1.5;
+    }
+
+    /* ── Footer ── */
+    .login-footer {
+      text-align: center;
+      margin-top: 28px;
+      font-size: .7rem;
+      color: var(--muted);
+    }
+    .login-footer a {
+      color: var(--text);
+      text-decoration: none;
+      border-bottom: 1px solid transparent;
+      transition: color .15s, border-color .15s;
+    }
+    .login-footer a:hover {
+      color: var(--orange);
+      border-bottom-color: var(--orange);
+    }
+  </style>
+</head>
+
+<body>
+
+  <div class="login-wrap">
+
+    <div class="login-logo">Big<span> Pizza</span></div>
+    <div class="login-subtitle">PARANÁ &nbsp;—&nbsp; Panel de Control</div>
+
+    <div class="login-card">
+      <div class="card-title">Iniciar sesión</div>
+
+      <form id="loginForm" novalidate>
+
+        <div class="field">
+          <label for="usuarioInput">Usuario</label>
+          <input
+            type="text"
+            id="usuarioInput"
+            placeholder="tu usuario"
+            autocomplete="username"
+            required
+            spellcheck="false"
+            autocapitalize="none">
+        </div>
+
+        <div class="field">
+          <label for="passwordInput">Contraseña</label>
+          <div class="password-wrap">
+            <input
+              type="password"
+              id="passwordInput"
+              placeholder="••••••••"
+              autocomplete="current-password"
+              required>
+            <button type="button" class="btn-show-pass" id="btnShowPass" aria-label="Mostrar contraseña">
+              👁
+            </button>
+          </div>
+        </div>
+
+        <div class="login-error" id="loginError"></div>
+
+        <button type="submit" class="btn-login" id="loginBtn">
+          <span class="btn-loader"></span>
+          <span id="btnText">Ingresar</span>
+        </button>
+
+      </form>
+
+      <div class="access-note">
+        ¿No tenés acceso? Contactá al administrador.
+      </div>
+    </div>
+
+    <div class="login-footer">
+      Created and designed by
+      <a href="https://www.linkedin.com/in/pablo-mari%C3%B1o-785138236/" target="_blank"
+        rel="noopener noreferrer">Pablo Mariño</a>
+    </div>
+
+  </div>
+
+  <script>
+    /* ── Si ya hay sesión activa, ir directo al dashboard ── */
+    (function () {
+      const session = verificarSesion !== undefined ? null : null;
+      try {
+        const s = verificarSesion();
+        if (s) window.location.replace('/dashboard.html');
+      } catch (e) { /* Sin sesión — mostrar formulario */ }
+    })();
+
+    /* ── Toggle de contraseña ── */
+    document.getElementById('btnShowPass').addEventListener('click', () => {
+      const input = document.getElementById('passwordInput');
+      const btn = document.getElementById('btnShowPass');
+      const mostrar = input.type === 'password';
+      input.type = mostrar ? 'text' : 'password';
+      btn.textContent = mostrar ? '🙈' : '👁';
+    });
+
+    /* ── Submit del formulario ── */
+    document.getElementById('loginForm').addEventListener('submit', async (e) => {
+      e.preventDefault();
+
+      const usuario  = document.getElementById('usuarioInput').value.trim();
+      const password = document.getElementById('passwordInput').value;
+      const btn      = document.getElementById('loginBtn');
+      const errorEl  = document.getElementById('loginError');
+
+      /* Limpiar error */
+      errorEl.style.display = 'none';
+
+      if (!usuario || !password) {
+        mostrarError('Completá el usuario y la contraseña.');
+        return;
+      }
+
+      /* Estado cargando */
+      btn.disabled = true;
+      btn.classList.add('loading');
+      document.getElementById('btnText').textContent = 'Ingresando...';
+
+      try {
+        const resultado = await iniciarSesion(usuario, password);
+
+        if (!resultado.ok) {
+          mostrarError(resultado.error || '❌ Usuario o contraseña incorrectos.');
+          return;
+        }
+
+        /* ✅ Login exitoso */
+        document.getElementById('btnText').textContent = '✅ ¡Bienvenido!';
+        setTimeout(() => window.location.replace('/dashboard.html'), 500);
+
+      } catch (e) {
+        mostrarError('Error de conexión. Verificá que el servidor esté activo.');
+      } finally {
+        btn.disabled = false;
+        btn.classList.remove('loading');
+        if (document.getElementById('btnText').textContent !== '✅ ¡Bienvenido!') {
+          document.getElementById('btnText').textContent = 'Ingresar';
+        }
+      }
+    });
+
+    function mostrarError(msg) {
+      const el = document.getElementById('loginError');
+      el.textContent = msg;
+      el.style.display = 'block';
+      /* Re-trigger animation */
+      el.style.animation = 'none';
+      el.offsetHeight;
+      el.style.animation = '';
+    }
+  </script>
+
+</body>
+
+</html>

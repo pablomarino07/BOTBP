@@ -1,3 +1,7 @@
 node_modules/
 .env
 .DS_Store
+
+# Sesión y caché de WhatsApp Web (760 MB — no subir a GitHub)
+.wwebjs_auth/
+.wwebjs_cache/

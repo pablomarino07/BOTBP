@@ -7,12 +7,12 @@
    ============================================================ */
 
 import pkg from 'whatsapp-web.js';
-const { Client, LocalAuth } = pkg;
+const { Client, LocalAuth } = pkg;  /* local auth supuestamente par aguardar la sesion de whatsapp*/
 
 export const client = new Client({
-    authStrategy: new LocalAuth(),
+    authStrategy: new LocalAuth(),   /* el auth strategy es para guardar la sesion de whatsapp*/
     puppeteer: {
-        headless: true,
+        headless: true,    /* headless es para que no se abra el navegador*/
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
@@ -39,8 +39,8 @@ client.on('disconnected', async (reason) => {
        el bot vuelve solo sin necesidad de intervención */
     setTimeout(async () => {
         try {
-            await client.initialize();
-        } catch (e) {
+            await client.initialize();   /* await es para que espere a que se conecte*/
+        } catch (e) {    /* catch para que agarre el error de reconexion*/
             console.error('❌ [WhatsApp] Error al reconectar:', e.message);
         }
     }, 10000);

@@ -1,0 +1,79 @@
+/* ============================================================
+   auth.js — Autenticación con JWT propio (sin Supabase Auth)
+   Usuario y contraseña se configuran en el .env del servidor.
+   Cargado en: login.html y dashboard.html
+   ============================================================ */
+
+const AUTH_TOKEN_KEY = 'bp_auth_token';
+
+/* ── Guarda el token JWT en localStorage ── */
+function guardarToken(token) {
+    localStorage.setItem(AUTH_TOKEN_KEY, token);
+}
+
+/* ── Obtiene el token guardado ── */
+function obtenerToken() {
+    return localStorage.getItem(AUTH_TOKEN_KEY);
+}
+
+/* ── Decodifica el payload del JWT (la firma la verifica el backend) ── */
+function decodificarToken(token) {
+    try {
+        return JSON.parse(atob(token.split('.')[1]));
+    } catch {
+        return null;
+    }
+}
+
+/* ── Verifica si hay sesión activa y no expiró ──
+   Si NO hay sesión o expiró: redirige a /login.html
+   Si HAY sesión: devuelve { usuario } */
+function verificarSesion() {
+    const token = obtenerToken();
+    if (!token) {
+        window.location.replace('/login.html');
+        return null;
+    }
+
+    const payload = decodificarToken(token);
+    if (!payload) {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        window.location.replace('/login.html');
+        return null;
+    }
+
+    /* Verificar expiración */
+    if (payload.exp && Date.now() / 1000 > payload.exp) {
+        localStorage.removeItem(AUTH_TOKEN_KEY);
+        window.location.replace('/login.html');
+        return null;
+    }
+
+    return { usuario: payload.usuario };
+}
+
+/* ── Login con usuario y contraseña ── */
+async function iniciarSesion(usuario, password) {
+    try {
+        const res = await fetch('/api/login', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ usuario, password })
+        });
+        const data = await res.json();
+
+        if (data.ok && data.token) {
+            guardarToken(data.token);
+            return { ok: true, usuario: data.usuario };
+        }
+        return { ok: false, error: data.error || 'Credenciales incorrectas.' };
+    } catch (e) {
+        return { ok: false, error: 'No se pudo conectar con el servidor.' };
+    }
+}
+
+/* ── Cierra sesión y redirige a login ── */
+function cerrarSesion() {
+    localStorage.removeItem(AUTH_TOKEN_KEY);
+    window.location.replace('/login.html');
+}

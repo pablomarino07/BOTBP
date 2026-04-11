@@ -113,7 +113,8 @@ pizza familiar + 6 empanadas piedra $15990
 - Si es una conversacion que no tiene nada que ver con un pedido (ej: el cliente solo saluda o pregunta por horarios), devuelve "pedido_cerrado": false y no infieras items ni total.
 - Si son preguntas que no tienen nada que ver con comida o pedidos (ej: "¿están abiertos hoy?"), devuelve "pedido_cerrado": false y no infieras items ni total.
 - Puede haber conversaciones con el jefe de la pizzería o entre empleados, si no hay un cliente haciendo un pedido concreto, devuelve "pedido_cerrado": false y no infieras items ni total.
-
+- Puede ser que no haya ningun nombre, o direccion. Si no es hay direccion pones "take_away" y si no hay nombre pones "no_name_yet"
+- Los items deben ir con mayuscula donde corresponden. Por ejemplo: Empanadas no empanadas
 ### SCHEMA DE SALIDA:
 {
   "pedido_cerrado": boolean,
