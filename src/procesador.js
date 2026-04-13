@@ -24,7 +24,38 @@ export async function procesarPedidoDesdeChat(telefono, historialChat) {
     try {
         console.log(`\n--- 🤖 Procesando [${telefono}] ---`);
 
-        const promptCompleto = `${SYSTEM_PROMPT}\n\nChat a procesar:\n${historialChat}`;
+        /* --- FETCH DEL MENU DINÁMICO --- */
+        let stringMenu = "### MENÚ OFICIAL (NOMBRE | PRECIO):\n---\n\n";
+        try {
+            const { data: menuData, error: menuErr } = await supabase.from('menu').select('tipo, producto, variante, precio');
+            
+            if (menuErr || !menuData || menuData.length === 0) {
+                console.warn(`   ⚠️ No se pudo cargar el menú dinámico:`, menuErr?.message);
+                stringMenu += "Sin menú cargado actualmente.\n---\n\n";
+            } else {
+                // Agrupamos por TIPO
+                const categorias = {};
+                menuData.forEach(item => {
+                    const tipo = (item.tipo || 'OTROS').toUpperCase();
+                    if (!categorias[tipo]) categorias[tipo] = [];
+                    const prod = item.producto ? item.producto.toLowerCase() : '';
+                    const vari = item.variante ? item.variante.toLowerCase() : '';
+                    const prec = item.precio ? `$${item.precio}` : '';
+                    categorias[tipo].push(`${prod} ${vari} ${prec}`.trim());
+                });
+
+                for (const [tipo, items] of Object.entries(categorias)) {
+                    stringMenu += `**${tipo}**\n\n`;
+                    items.forEach(i => stringMenu += `${i}\n`);
+                    stringMenu += `\n---\n\n`;
+                }
+            }
+        } catch (e) {
+            console.error(`   ❌ Falló el fetch del menú dinámico:`, e.message);
+            stringMenu += "Error cargando menú.\n---\n\n";
+        }
+
+        const promptCompleto = `${SYSTEM_PROMPT}\n\n${stringMenu}\nChat a procesar:\n${historialChat}`;
 
         let result, response;
         const MAX_INTENTOS = 3;

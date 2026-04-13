@@ -13,6 +13,7 @@ export const client = new Client({
     authStrategy: new LocalAuth(),   /* el auth strategy es para guardar la sesion de whatsapp*/
     puppeteer: {
         headless: true,    /* headless es para que no se abra el navegador*/
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',

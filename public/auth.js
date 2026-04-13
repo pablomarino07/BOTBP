@@ -30,22 +30,24 @@ function decodificarToken(token) {
    Si HAY sesión: devuelve { usuario } */
 function verificarSesion() {
     const token = obtenerToken();
+    const isLoginPage = window.location.pathname.includes('login.html') || window.location.href.includes('login.html');
+
     if (!token) {
-        window.location.replace('/login.html');
+        if (!isLoginPage) window.location.replace('login.html');
         return null;
     }
 
     const payload = decodificarToken(token);
     if (!payload) {
         localStorage.removeItem(AUTH_TOKEN_KEY);
-        window.location.replace('/login.html');
+        if (!isLoginPage) window.location.replace('login.html');
         return null;
     }
 
     /* Verificar expiración */
     if (payload.exp && Date.now() / 1000 > payload.exp) {
         localStorage.removeItem(AUTH_TOKEN_KEY);
-        window.location.replace('/login.html');
+        if (!isLoginPage) window.location.replace('login.html');
         return null;
     }
 
@@ -75,5 +77,5 @@ async function iniciarSesion(usuario, password) {
 /* ── Cierra sesión y redirige a login ── */
 function cerrarSesion() {
     localStorage.removeItem(AUTH_TOKEN_KEY);
-    window.location.replace('/login.html');
+    window.location.replace('login.html');
 }

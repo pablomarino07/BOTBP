@@ -1,0 +1,9 @@
+node_modules
+.env
+.git
+.gitignore
+README.md
+MEJORAS_PENDIENTES.md
+.wwebjs_auth
+.wwebjs_cache
+INICIAR.bat

@@ -13,6 +13,7 @@
 import express from 'express'; /* express es para crear el servidor*/
 import cors from 'cors'; /* cors es para permitir la comunicacion entre el frontend y el backend*/
 import path from 'path'; /* path es para manejar rutas de archivos*/
+import rateLimit from 'express-rate-limit'; /* rateLimit protege a la API de ataques de fuerza bruta*/
 import { fileURLToPath } from 'url'; /* fileURLToPath es para obtener la ruta del archivo*/
 import { createClient } from '@supabase/supabase-js'; /* createClient es para crear un cliente de supabase*/
 import { procesarPedidoDesdeChat } from './procesador.js'; /* procesarPedidoDesdeChat es para procesar el pedido*/
@@ -23,15 +24,28 @@ import crypto from 'crypto';
 import * as dotenv from 'dotenv';
 dotenv.config();
 
+if (!process.env.JWT_SECRET) {
+    throw new Error('❌ JWT_SECRET no definida en tu archivo .env. Por seguridad, el servidor no puede arrancar.');
+}
+
 const __dirname = path.dirname(fileURLToPath(import.meta.url)); /* __dirname es para obtener la ruta del archivo*/
 const app = express(); /* app es para crear el servidor*/
-const PORT = 3000; /* PORT es para definir el puerto*/
+const PORT = process.env.PORT || 3000; /* PORT es para definir el puerto*/
 
-/* ── CORS: solo permitimos requests desde localhost ──
-   En producción esto evita que cualquier sitio externo
-   pueda llamar a nuestra API */
-app.use(cors({ origin: ['http://localhost:3000', 'null'] }));
+/* ── CORS: permitimos localhost y el dominio explícito si existe en .env ── */
+const allowedOrigins = ['http://localhost:3000', 'null'];
+if (process.env.DASHBOARD_URL) allowedOrigins.push(process.env.DASHBOARD_URL);
+app.use(cors({ origin: allowedOrigins }));
 app.use(express.json());
+
+/* ── SHIELD / RATE LIMITER ──
+   Previene ataques de fuerza bruta en el inicio de sesión */
+const limiter = rateLimit({
+    windowMs: 15 * 60 * 1000, /* 15 minutos */
+    max: 100, /* máximo 100 peticiones por IP por ventana */
+    message: { ok: false, error: 'Demasiadas peticiones. Por favor, reintentá más tarde.' }
+});
+app.use('/api/login', limiter);
 
 /* Servimos el dashboard desde la carpeta public/ */
 app.use(express.static(path.join(__dirname, '..', 'public')));
@@ -67,7 +81,7 @@ const requireAuth = (req, res, next) => {
 
     const token = authHeader.substring(7);
     try {
-        const payload = jwt.verify(token, process.env.JWT_SECRET || 'fallback_secret_inseguro');
+        const payload = jwt.verify(token, process.env.JWT_SECRET);
         req.usuario = payload.usuario;
         next();
     } catch (e) {
@@ -79,8 +93,8 @@ const requireAuth = (req, res, next) => {
 };
 
 /* ── CONFIGURACIÓN DE TURNOS ── */
-let horaTurno1 = '12:00';
-let horaTurno2 = '23:00';
+let horaTurno1 = '14:36';
+let horaTurno2 = '23:30';
 
 /* ── QR EN MEMORIA ──
    Cuando WhatsApp genera el QR lo guardamos acá.
@@ -102,6 +116,11 @@ client.on('ready', () => {
 client.on('disconnected', () => {
     estadoConexion = 'desconectado';
     qrActual = null;
+    console.log('❌ [WhatsApp] Desconectado. Intentando reconectar automáticamente en 30 segundos...');
+    setTimeout(() => {
+        console.log('🔄 [WhatsApp] Reconectando...');
+        client.initialize().catch(err => console.error('Error al reconectar:', err));
+    }, 30000);
 });
 
 /* ── COLA DE MENSAJES ESPACIADA ──
@@ -253,17 +272,26 @@ async function procesarTurno(origen = 'automático') {
    SCHEDULER
    ============================================================ */
 export function iniciarScheduler() {
-    console.log(`⏰ Scheduler activo — Turno 1: ${horaTurno1} | Turno 2: ${horaTurno2}`);
-
-    setInterval(async () => {
+    const proxEjecucion = () => {
         const ahora = new Date();
-        const horaActual = `${String(ahora.getHours()).padStart(2, '0')}:${String(ahora.getMinutes()).padStart(2, '0')}`;
-        if (horaActual === horaTurno1 || horaActual === horaTurno2) {
-            await procesarTurno('automático');
-        }
-    }, 60000);
-}
+        const h = ahora.getHours(), m = ahora.getMinutes();
+        const horarios = [horaTurno1, horaTurno2].map(hh => {
+            const [hh_num, mm_num] = hh.split(':').map(Number);
+            const fecha = new Date();
+            fecha.setHours(hh_num, mm_num, 0, 0);
+            return fecha > ahora ? fecha : null;
+        }).filter(Boolean);
 
+        if (horarios.length === 0) return 24 * 60 * 60 * 1000; // Próxima ejecución mañana
+
+        const proxima = Math.min(...horarios.map(f => f - ahora));
+        setTimeout(async () => {
+            await procesarTurno('automático');
+            proxEjecucion(); // Recalcular
+        }, proxima);
+    };
+    proxEjecucion();
+}
 
 /* ============================================================
    ENDPOINTS HTTP
@@ -277,13 +305,16 @@ app.post('/api/login', (req, res) => {
     if (!usuario || !password) {
         return res.status(400).json({ ok: false, error: 'Faltan datos.' });
     }
+    if (usuario.length > 100 || password.length > 500) {
+        return res.status(400).json({ ok: false, error: 'Entrada muy larga.' });
+    }
     if (!verificarCredenciales(usuario, password)) {
         console.warn(`🔐 [Auth] Intento de login fallido para usuario: "${usuario}"`);
         return res.status(401).json({ ok: false, error: 'Usuario o contraseña incorrectos.' });
     }
     const token = jwt.sign(
         { usuario },
-        process.env.JWT_SECRET || 'fallback_secret_inseguro',
+        process.env.JWT_SECRET,
         { expiresIn: '12h' }
     );
     console.log(`✅ [Auth] Login exitoso: "${usuario}"`);
@@ -407,7 +438,7 @@ app.post('/api/enviar-todos', async (req, res) => {
             clientesAEnviar,
             (c) => mensaje.replace(/{nombre}/gi, c.nombre || 'cliente')
         );
-        
+
         /* Actualizamos la fecha a los que se les envio, omitiendo los fallidos si quisieramos, 
            pero promediamos aca guardandolos a todos los que entraron en la cola */
         const lote = clientesAEnviar.slice(0, MAX_POR_LOTE);
@@ -415,7 +446,7 @@ app.post('/api/enviar-todos', async (req, res) => {
             const ids = lote.map(c => c.id);
             await supabase.from('clientes').update({ ultimo_remarketing: new Date().toISOString() }).in('id', ids);
         }
-        
+
         res.json({ ok: true, ...resultado });
     } catch (e) {
         res.status(500).json({ ok: false, error: e.message });
@@ -437,4 +468,4 @@ export function arrancarServidor() {
         }
     });
 }
-
+

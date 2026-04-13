@@ -24,7 +24,10 @@ async function cargarHistorial(chatId) {
             .eq('chat_id', chatId)
             .single();
         return data?.mensajes || [];
-    } catch { return []; }
+    } catch (e) {
+        console.error(`❌ [Historial] Error cargando ${chatId}:`, e.message);
+        return [];
+    }
 }
 
 async function guardarHistorial(chatId, telefono, mensajes) {
@@ -39,7 +42,7 @@ async function procesarMensaje(msg) {
     try {
         /* Ignoramos los estados de WhatsApp para que no rompa el getChat ni se acumulen */
         if (msg.from === 'status@broadcast' || msg.to === 'status@broadcast') return;
-        
+
         /* Ignoramos los canales / newsletters de WhatsApp */
         const isChannel = msg.from?.includes('@newsletter') || msg.to?.includes('@newsletter');
         if (isChannel) return;

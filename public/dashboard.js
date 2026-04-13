@@ -15,7 +15,7 @@ window.onload = async () => {
   if (emailEl) emailEl.textContent = session.usuario;
 
   verificarEstado();
-  setInterval(verificarEstado, 5000);
+  setInterval(verificarEstado, 5000);  // ← Polling cada 5s
   cargarDatos();
   cargarLogsTurnos();
 };
