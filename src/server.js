@@ -65,8 +65,8 @@ function igualdadSegura(a, b) {
 }
 
 function verificarCredenciales(usuario, password) {
-    const userValido = process.env.DASHBOARD_USER || '';
-    const passValida = process.env.DASHBOARD_PASSWORD || '';
+    const userValido = (process.env.DASHBOARD_USER || '').trim();
+    const passValida = (process.env.DASHBOARD_PASSWORD || '').trim();
     return igualdadSegura(usuario, userValido) && igualdadSegura(password, passValida);
 }
 
@@ -93,7 +93,7 @@ const requireAuth = (req, res, next) => {
 };
 
 /* ── CONFIGURACIÓN DE TURNOS ── */
-let horaTurno1 = '14:36';
+let horaTurno1 = '14:22';
 let horaTurno2 = '23:30';
 
 /* ── QR EN MEMORIA ──

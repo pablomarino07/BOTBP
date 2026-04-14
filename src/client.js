@@ -12,14 +12,21 @@ const { Client, LocalAuth } = pkg;  /* local auth supuestamente par aguardar la 
 export const client = new Client({
     authStrategy: new LocalAuth(),   /* el auth strategy es para guardar la sesion de whatsapp*/
     puppeteer: {
-        headless: true,    /* headless es para que no se abra el navegador*/
-        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || null,
+        headless: true,
+        executablePath: process.env.PUPPETEER_EXECUTABLE_PATH || undefined,
         args: [
             '--no-sandbox',
             '--disable-setuid-sandbox',
-            '--disable-dev-shm-usage',   /* evita crashes por falta de memoria compartida */
-            '--disable-gpu'              /* no necesitamos GPU en servidor */
+            '--disable-dev-shm-usage',
+            '--disable-accelerated-2d-canvas',
+            '--no-first-run',
+            '--no-zygote',
+            '--disable-gpu'
         ]
+    },
+    webVersionCache: {
+        type: 'remote',
+        remotePath: 'https://raw.githubusercontent.com/wppconnect-team/wa-version/main/html/2.2412.54.html'
     }
 });
 
