@@ -103,9 +103,18 @@ async function cargarQR() {
     const data = await api('GET', '/qr');
     if (!data.ok) { area.innerHTML = `<div style="color:var(--muted);font-size:.85rem;padding:20px">${data.mensaje || 'QR no disponible aún. Esperá y actualizá.'}</div>`; return; }
     area.innerHTML = '<div id="qrCanvas"></div>';
-    if (qrInstance) qrInstance.clear();
-    qrInstance = new QRCode(document.getElementById('qrCanvas'), { text: data.qr, width: 240, height: 240, colorDark: '#000', colorLight: '#fff' });
-  } catch (e) { area.innerHTML = `<div class="error-msg">Error: ${e.message}</div>`; }
+    qrInstance = new QRCode(document.getElementById('qrCanvas'), {
+      text: data.qr,
+      width: 240,
+      height: 240,
+      colorDark: '#000000',
+      colorLight: '#ffffff',
+      correctLevel: QRCode.CorrectLevel.L // Nivel L es vital para WhatsApp QRs largos
+    });
+  } catch (e) {
+    area.innerHTML = `<div class="error-msg">Error: ${e.message}</div>`;
+    console.error("Error cargando QR:", e);
+  }
 }
 
 /* ── Tabs ── */
