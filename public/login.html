@@ -5,7 +5,9 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Big Pizza-PARANÁ — Acceso</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23f5631a'/><text x='16' y='22' font-family='Arial Black,sans-serif' font-size='16' font-weight='900' fill='white' text-anchor='middle'>BP</text></svg>">
   <meta name="description" content="Acceso al panel de control de Big Pizza-PARANÁ">
+
 
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap"
     rel="stylesheet">
@@ -83,8 +85,15 @@
     }
 
     @keyframes fadeUp {
-      from { opacity: 0; transform: translateY(28px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(28px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* ── Logo ── */
@@ -97,7 +106,10 @@
       margin-bottom: 2px;
       line-height: 1;
     }
-    .login-logo span { color: var(--text); }
+
+    .login-logo span {
+      color: var(--text);
+    }
 
     .login-subtitle {
       text-align: center;
@@ -114,7 +126,7 @@
       border: 1px solid var(--border);
       border-radius: 16px;
       padding: 36px 36px 32px;
-      box-shadow: 0 24px 64px rgba(0,0,0,0.5), 0 0 0 1px rgba(245,99,26,0.04);
+      box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(245, 99, 26, 0.04);
     }
 
     .card-title {
@@ -126,7 +138,9 @@
     }
 
     /* ── Campos ── */
-    .field { margin-bottom: 18px; }
+    .field {
+      margin-bottom: 18px;
+    }
 
     .field label {
       display: block;
@@ -149,15 +163,25 @@
       transition: border-color .15s, box-shadow .15s;
       outline: none;
     }
+
     .field input:focus {
       border-color: var(--orange);
-      box-shadow: 0 0 0 3px rgba(245,99,26,0.12);
+      box-shadow: 0 0 0 3px rgba(245, 99, 26, 0.12);
     }
-    .field input::placeholder { color: var(--muted); opacity: 0.45; }
+
+    .field input::placeholder {
+      color: var(--muted);
+      opacity: 0.45;
+    }
 
     /* ── Contraseña con toggle ── */
-    .password-wrap { position: relative; }
-    .password-wrap input { padding-right: 46px; }
+    .password-wrap {
+      position: relative;
+    }
+
+    .password-wrap input {
+      padding-right: 46px;
+    }
 
     .btn-show-pass {
       position: absolute;
@@ -173,13 +197,16 @@
       line-height: 1;
       transition: color .15s;
     }
-    .btn-show-pass:hover { color: var(--text); }
+
+    .btn-show-pass:hover {
+      color: var(--text);
+    }
 
     /* ── Error ── */
     .login-error {
       display: none;
-      background: rgba(239,68,68,0.1);
-      border: 1px solid rgba(239,68,68,0.25);
+      background: rgba(239, 68, 68, 0.1);
+      border: 1px solid rgba(239, 68, 68, 0.25);
       color: var(--red);
       font-size: .82rem;
       padding: 10px 14px;
@@ -188,9 +215,17 @@
       line-height: 1.4;
       animation: fadeIn .2s ease;
     }
+
     @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(-4px); }
-      to   { opacity: 1; transform: translateY(0); }
+      from {
+        opacity: 0;
+        transform: translateY(-4px);
+      }
+
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
     }
 
     /* ── Botón principal ── */
@@ -212,21 +247,39 @@
       justify-content: center;
       gap: 8px;
     }
-    .btn-login:hover:not(:disabled) { opacity: .88; }
-    .btn-login:active:not(:disabled) { transform: scale(.99); }
-    .btn-login:disabled { opacity: .55; cursor: not-allowed; }
+
+    .btn-login:hover:not(:disabled) {
+      opacity: .88;
+    }
+
+    .btn-login:active:not(:disabled) {
+      transform: scale(.99);
+    }
+
+    .btn-login:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+    }
 
     .btn-loader {
       display: none;
       width: 14px;
       height: 14px;
-      border: 2px solid rgba(255,255,255,0.3);
+      border: 2px solid rgba(255, 255, 255, 0.3);
       border-top-color: #fff;
       border-radius: 50%;
       animation: spin .7s linear infinite;
     }
-    .btn-login.loading .btn-loader { display: block; }
-    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .btn-login.loading .btn-loader {
+      display: block;
+    }
+
+    @keyframes spin {
+      to {
+        transform: rotate(360deg);
+      }
+    }
 
     /* ── Nota de acceso ── */
     .access-note {
@@ -246,12 +299,14 @@
       font-size: .7rem;
       color: var(--muted);
     }
+
     .login-footer a {
       color: var(--text);
       text-decoration: none;
       border-bottom: 1px solid transparent;
       transition: color .15s, border-color .15s;
     }
+
     .login-footer a:hover {
       color: var(--orange);
       border-bottom-color: var(--orange);
@@ -273,25 +328,14 @@
 
         <div class="field">
           <label for="usuarioInput">Usuario</label>
-          <input
-            type="text"
-            id="usuarioInput"
-            placeholder="tu usuario"
-            autocomplete="username"
-            required
-            spellcheck="false"
-            autocapitalize="none">
+          <input type="text" id="usuarioInput" placeholder="tu usuario" autocomplete="username" required
+            spellcheck="false" autocapitalize="none">
         </div>
 
         <div class="field">
           <label for="passwordInput">Contraseña</label>
           <div class="password-wrap">
-            <input
-              type="password"
-              id="passwordInput"
-              placeholder="••••••••"
-              autocomplete="current-password"
-              required>
+            <input type="password" id="passwordInput" placeholder="••••••••" autocomplete="current-password" required>
             <button type="button" class="btn-show-pass" id="btnShowPass" aria-label="Mostrar contraseña">
               👁
             </button>
@@ -314,8 +358,8 @@
 
     <div class="login-footer">
       Created and designed by
-      <a href="https://www.linkedin.com/in/pablo-mari%C3%B1o-785138236/" target="_blank"
-        rel="noopener noreferrer">Pablo Mariño</a>
+      <a href="https://www.linkedin.com/in/pablo-mari%C3%B1o-785138236/" target="_blank" rel="noopener noreferrer">Pablo
+        Mariño</a>
     </div>
 
   </div>
@@ -343,10 +387,10 @@
     document.getElementById('loginForm').addEventListener('submit', async (e) => {
       e.preventDefault();
 
-      const usuario  = document.getElementById('usuarioInput').value.trim();
+      const usuario = document.getElementById('usuarioInput').value.trim();
       const password = document.getElementById('passwordInput').value;
-      const btn      = document.getElementById('loginBtn');
-      const errorEl  = document.getElementById('loginError');
+      const btn = document.getElementById('loginBtn');
+      const errorEl = document.getElementById('loginError');
 
       /* Limpiar error */
       errorEl.style.display = 'none';
@@ -370,7 +414,7 @@
         }
 
         /* ✅ Login exitoso */
-        document.getElementById('btnText').textContent = '✅ ¡Bienvenido!';
+        document.getElementById('btnText').textContent = '¡Bienvenido!';
         setTimeout(() => window.location.replace('/dashboard.html'), 500);
 
       } catch (e) {
@@ -378,7 +422,7 @@
       } finally {
         btn.disabled = false;
         btn.classList.remove('loading');
-        if (document.getElementById('btnText').textContent !== '✅ ¡Bienvenido!') {
+        if (document.getElementById('btnText').textContent !== '¡Bienvenido!') {
           document.getElementById('btnText').textContent = 'Ingresar';
         }
       }

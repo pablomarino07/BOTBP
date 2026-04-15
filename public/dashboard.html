@@ -5,19 +5,31 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>Big Pizza-PARANA — Dashboard</title>
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='8' fill='%23f5631a'/><text x='16' y='22' font-family='Arial Black,sans-serif' font-size='16' font-weight='900' fill='white' text-anchor='middle'>BP</text></svg>">
   <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
   <script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
   <script src="auth.js"></script>
-  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500&display=swap"
+  <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@300;400;500;600;700&display=swap"
     rel="stylesheet">
   <link rel="stylesheet" href="dashboard.css">
 </head>
 
 <body>
 
-  <header>
-    <div class="logo">Big<span> Pizza-PARANÁ</span></div>
-    <div class="header-right">
+  <!-- ── TOPNAV ── -->
+  <nav class="topnav">
+    <div class="nav-logo">
+      <div class="nav-logo-text">Big<span>Pizza-Paraná</span></div>
+    </div>
+
+    <div class="nav-links">
+      <button class="tab active" onclick="cambiarTab('metricas',this)">Métricas</button>
+      <button class="tab" onclick="cambiarTab('whatsapp',this)">WhatsApp</button>
+      <button class="tab" onclick="cambiarTab('turnos',this)">Turnos</button>
+      <button class="tab" onclick="cambiarTab('remarketing',this)">Remarketing</button>
+    </div>
+
+    <div class="nav-right">
       <div class="estado-server">
         <div class="dot" id="serverDot"></div>
         <span id="serverEstado">Conectando...</span>
@@ -28,15 +40,9 @@
         <button class="btn-ghost btn-sm" id="btnLogout" onclick="cerrarSesion()">Salir →</button>
       </div>
     </div>
-  </header>
+  </nav>
 
-  <div class="tabs">
-    <button class="tab active" onclick="cambiarTab('metricas',this)"> Métricas</button>
-    <button class="tab" onclick="cambiarTab('whatsapp',this)"> WhatsApp</button>
-    <button class="tab" onclick="cambiarTab('turnos',this)"> Turnos</button>
-    <button class="tab" onclick="cambiarTab('remarketing',this)"> Remarketing</button>
-  </div>
-
+  <!-- ── FILTROS (solo en métricas) ── -->
   <div class="filters" id="filters">
     <button class="filter-btn active" onclick="setFiltro('hoy',this)">Hoy</button>
     <button class="filter-btn" onclick="setFiltro('semana',this)">Esta semana</button>
@@ -46,8 +52,12 @@
 
   <main>
 
-    <!-- MÉTRICAS -->
+    <!-- ══ MÉTRICAS ══ -->
     <div class="page active" id="page-metricas">
+      <div class="page-header">
+        <div class="page-title">Métricas <span>Ventas</span></div>
+        <div class="page-sub">Resumen de pedidos y performance del bot</div>
+      </div>
       <div class="kpis">
         <div class="kpi">
           <div class="kpi-label">Ventas totales</div>
@@ -75,6 +85,7 @@
           <div class="kpi-sub">más pedidos</div>
         </div>
       </div>
+
       <div class="charts">
         <div class="card">
           <div class="card-title">Ventas por día</div>
@@ -85,6 +96,7 @@
           <div class="chart-wrap"><canvas id="chartProductos"></canvas></div>
         </div>
       </div>
+
       <div class="charts-row2">
         <div class="card">
           <div class="card-title">Pedidos por hora</div>
@@ -101,23 +113,61 @@
       </div>
     </div>
 
-    <!-- WHATSAPP QR -->
+    <!-- ══ WHATSAPP QR ══ -->
     <div class="page" id="page-whatsapp">
-      <div class="qr-section">
-        <div class="qr-titulo">Vincular WhatsApp</div>
-        <div class="qr-desc">Abrí WhatsApp en el celular de la pizzería →<br><strong>Dispositivos vinculados → Vincular
-            dispositivo</strong><br>y escaneá el código de abajo.</div>
-        <div id="qrArea">
-          <div class="loading">
-            <div class="spinner"></div> Esperando QR...
+      <div class="page-header">
+        <div class="page-title">WhatsApp <span>QR</span></div>
+        <div class="page-sub">Vinculá el dispositivo para recibir pedidos</div>
+      </div>
+      <div class="qr-grid">
+
+        <!-- Izquierda: Estado + Pasos -->
+        <div class="card">
+          <div class="conn-section-title">Estado de la conexión</div>
+          <div class="conn-row">
+            <span class="conn-label">Estado</span>
+            <span id="waBotStatus" class="wa-status-badge">Conectando...</span>
+          </div>
+          <div class="conn-row">
+            <span class="conn-label">Actualizado</span>
+            <span class="conn-value" id="waLastUpdate">—</span>
+          </div>
+
+          <div class="conn-section-title"
+            style="margin-top:24px;padding-top:20px;border-top:1px solid var(--glass-border)">Cómo escanear el QR</div>
+          <div class="qr-step"><span class="qr-step-num">1</span><span>Abrí WhatsApp en el celular de la pizzería</span>
+          </div>
+          <div class="qr-step"><span class="qr-step-num">2</span><span>Tocá <strong>⋮ → Dispositivos
+                vinculados</strong></span></div>
+          <div class="qr-step"><span class="qr-step-num">3</span><span>Tocá <strong>Vincular dispositivo</strong> y
+              escaneá el QR</span></div>
+        </div>
+
+        <!-- Derecha: QR Widget -->
+        <div class="card qr-widget-glass">
+          <div class="qr-titulo">Código QR de WhatsApp</div>
+          <div class="qr-desc">Escaneá con la cámara de WhatsApp del celular de la pizzería</div>
+          <div id="qrArea">
+            <div class="loading">
+              <div class="spinner"></div> Esperando QR...
+            </div>
+          </div>
+          <div class="qr-btn-row">
+            <button class="btn-ghost" onclick="cargarQR()">🔄 Actualizar QR</button>
+            <button class="btn" onclick="cargarQR()">🔌 Reconectar</button>
           </div>
         </div>
-        <div style="margin-top:16px"><button class="btn-ghost" onclick="cargarQR()">🔄 Actualizar QR</button></div>
+
       </div>
     </div>
 
-    <!-- TURNOS -->
+    <!-- ══ TURNOS ══ -->
     <div class="page" id="page-turnos">
+      <div class="page-header">
+        <div class="page-title">Turnos <span>Auto</span></div>
+        <div class="page-sub">Procesamiento automático de conversaciones</div>
+      </div>
+
       <div class="procesar-ahora-card">
         <div class="procesar-info">
           <div class="procesar-titulo">⚡ Procesar ahora</div>
@@ -126,6 +176,7 @@
         </div>
         <button class="btn-yellow" id="btnProcesarAhora" onclick="procesarAhora()">Procesar ahora</button>
       </div>
+
       <div class="resultado-proceso" id="resultadoProceso">
         <div class="resultado-titulo">Último procesamiento</div>
         <div class="resultado-grid">
@@ -147,10 +198,13 @@
           </div>
         </div>
       </div>
+
       <div class="turnos-layout">
         <div class="turno-card">
           <div class="turno-card-title">🌅 Turno 1</div>
-          <div class="turno-field"><label>Hora de cierre</label><input type="time" id="turno1Input" value="12:00" />
+          <div class="turno-field">
+            <label>Hora de cierre</label>
+            <input type="time" id="turno1Input" value="12:00" />
           </div>
           <div class="rm-hint">Se procesarán todas las conversaciones a esta hora.</div>
           <button class="btn" onclick="guardarTurnos()">Guardar horarios</button>
@@ -158,11 +212,14 @@
         </div>
         <div class="turno-card">
           <div class="turno-card-title">🌙 Turno 2</div>
-          <div class="turno-field"><label>Hora de cierre</label><input type="time" id="turno2Input" value="23:00" />
+          <div class="turno-field">
+            <label>Hora de cierre</label>
+            <input type="time" id="turno2Input" value="23:00" />
           </div>
           <div class="rm-hint">Se procesarán todas las conversaciones a esta hora.</div>
         </div>
       </div>
+
       <div class="card">
         <div class="card-title">Historial de turnos</div>
         <div id="logsTurnos">
@@ -173,16 +230,22 @@
       </div>
     </div>
 
-    <!-- REMARKETING -->
+    <!-- ══ REMARKETING ══ -->
     <div class="page" id="page-remarketing">
+      <div class="page-header">
+        <div class="page-title">Remarketing <span>Masivo</span></div>
+        <div class="page-sub">Reactivá clientes inactivos con mensajes personalizados</div>
+      </div>
       <div class="remarketing-layout">
 
-        <!-- Panel Izquierdo: Configuración de Campaña -->
+        <!-- Panel izquierdo: Configuración -->
         <div class="rm-panel">
-          <div class="rm-panel-title">📣 Campaña</div>
+          <div class="rm-panel-title">Campaña</div>
 
-          <div class="rm-alerta" id="rmAlerta" style="display:none">⚠️ WhatsApp no conectado.<br>Vinculá el dispositivo
-            en la tab <strong>WhatsApp</strong>.</div>
+          <div class="rm-alerta" id="rmAlerta" style="display:none">
+            ⚠️ WhatsApp no conectado.<br>
+            Vinculá el dispositivo en la tab <strong>WhatsApp</strong>.
+          </div>
 
           <!-- Segmento -->
           <div class="rm-field">
@@ -250,7 +313,7 @@
           </div>
         </div>
 
-        <!-- Panel Derecho: Lista de Clientes -->
+        <!-- Panel derecho: Lista de clientes -->
         <div>
           <div class="vencidos-header">
             <div class="vencidos-titulo" id="vencidosTitulo">Clientes sin comprar</div>
@@ -269,7 +332,7 @@
 
   </main>
 
-  <!-- Modal -->
+  <!-- ── MODAL ── -->
   <div class="modal-overlay" id="customModal">
     <div class="modal-box">
       <div class="modal-icon" id="modalIcon">⚠️</div>

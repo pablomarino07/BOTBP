@@ -73,6 +73,17 @@ async function verificarEstado() {
     if (data.whatsapp === 'conectado') { dot.className = 'dot conectado'; txt.textContent = 'WhatsApp conectado'; }
     else if (data.whatsapp === 'esperando_qr') { dot.className = 'dot esperando'; txt.textContent = 'Esperando escaneo QR'; }
     else { dot.className = 'dot desconectado'; txt.textContent = 'WhatsApp desconectado'; }
+
+    // Sincronizar estado en página WhatsApp
+    const waBadge = document.getElementById('waBotStatus');
+    if (waBadge) {
+      if (data.whatsapp === 'conectado') { waBadge.textContent = '● Bot Online'; waBadge.className = 'wa-status-badge wa-online'; }
+      else if (data.whatsapp === 'esperando_qr') { waBadge.textContent = '● Esperando QR'; waBadge.className = 'wa-status-badge wa-waiting'; }
+      else { waBadge.textContent = '● Offline'; waBadge.className = 'wa-status-badge wa-offline'; }
+    }
+    const waLast = document.getElementById('waLastUpdate');
+    if (waLast) waLast.textContent = document.getElementById('lastUpdate').textContent;
+
     if (data.turno1) document.getElementById('turno1Input').value = data.turno1;
     if (data.turno2) document.getElementById('turno2Input').value = data.turno2;
     const alerta = document.getElementById('rmAlerta');
@@ -86,7 +97,7 @@ async function verificarEstado() {
 /* ── QR ── */
 async function cargarQR() {
   const area = document.getElementById('qrArea');
-  if (estadoWA === 'conectado') { area.innerHTML = '<div class="qr-conectado">✅ WhatsApp ya está conectado</div>'; return; }
+  if (estadoWA === 'conectado') { area.innerHTML = '<div class="qr-conectado">WhatsApp ya está conectado</div>'; return; }
   area.innerHTML = '<div class="loading"><div class="spinner"></div> Cargando QR...</div>';
   try {
     const data = await api('GET', '/qr');
@@ -274,6 +285,7 @@ function renderListaVencidos(clientes, dias) {
     const bc = ds > 60 ? 'badge-red' : 'badge-yellow';
     const ne = (c.nombre || '').replace(/'/g, "\\'");
     const te = (c.telefono || '').replace(/'/g, "\\'");
+    const inicial = (c.nombre || '?')[0].toUpperCase();
 
     let infoRm = '';
     if (c.ultimo_remarketing) {
@@ -284,7 +296,7 @@ function renderListaVencidos(clientes, dias) {
       infoRm = ` · <span style="${color}">📣 Enviado ${textoTiempo}</span>`;
     }
 
-    return `<div class="cliente-vencido" id="cv-${c.id}"><div class="cv-info"><div class="cv-nombre">${c.nombre || 'Sin nombre'}</div><div class="cv-detalle">📱 ${c.telefono || 'Sin número'} · Última compra: ${ult}${infoRm}</div><div style="margin-top:6px"><span class="${bc}">${ds} días sin comprar</span></div></div><div class="cv-dias">${ds}<small>días</small></div><button class="btn-ghost" style="font-size:.75rem;white-space:nowrap;padding:6px 12px" id="btn-cv-${c.id}" onclick="enviarUno('${te}','${ne}','${c.id}')">Enviar →</button></div>`;
+    return `<div class="cliente-vencido" id="cv-${c.id}"><div class="client-avatar">${inicial}</div><div class="cv-info"><div class="cv-nombre">${c.nombre || 'Sin nombre'}</div><div class="cv-detalle">📱 ${c.telefono || 'Sin número'} · Última compra: ${ult}${infoRm}</div><div style="margin-top:6px"><span class="${bc}">${ds} días sin comprar</span></div></div><div class="cv-dias">${ds}<small>días</small></div><button class="btn-ghost" style="font-size:.75rem;white-space:nowrap;padding:6px 12px" id="btn-cv-${c.id}" onclick="enviarUno('${te}','${ne}','${c.id}')">Enviar →</button></div>`;
   }).join('');
 }
 
