@@ -8,6 +8,8 @@
 import qrcode from 'qrcode-terminal';
 import { createClient } from '@supabase/supabase-js';
 import * as dotenv from 'dotenv';
+import fs from 'fs';
+import path from 'path';
 import { client } from './client.js';
 import { arrancarServidor, iniciarScheduler } from './server.js';
 dotenv.config();
@@ -96,6 +98,16 @@ client.on('message_create', async (msg) => {
 /* ── ARRANQUE ── */
 
 console.log('\n🛠️  Iniciando Bot BP...');
+
+/* Eliminar bloqueos residuales de Chromium por si el servidor se reinició abruptamente */
+const lockFiles = ['SingletonLock', 'SingletonCookie', 'SingletonSocket'];
+lockFiles.forEach(file => {
+    const lockPath = path.join(process.cwd(), '.wwebjs_auth', 'session', file);
+    if (fs.existsSync(lockPath)) {
+        try { fs.unlinkSync(lockPath); console.log(`✅ [Clean] Eliminado bloqueo residual: ${file}`); }
+        catch (e) { console.error(`⚠️ [Clean] No se pudo eliminar ${file}:`, e.message); }
+    }
+});
 
 client.initialize();
 arrancarServidor();
