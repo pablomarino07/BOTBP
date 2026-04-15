@@ -2,7 +2,7 @@
    dashboard.js — Lógica del Dashboard Big Pizza PARANA
    ============================================================ */
 
-const API = 'http://localhost:3000/api';
+const API = '/api';
 let filtroActual = 'hoy', charts = {}, clientesVencidos = [], estadoWA = 'desconectado', qrInstance = null;
 
 window.onload = async () => {
