@@ -32,10 +32,16 @@ async function cargarHistorial(chatId) {
     }
 }
 
+/* Devuelve la hora actual en zona Argentina (UTC-3) como string ISO */
+function ahoraArgentina() {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+}
+
 async function guardarHistorial(chatId, telefono, mensajes) {
+    const ahora = ahoraArgentina();
     await supabase
         .from('historial_chats')
-        .upsert({ chat_id: chatId, telefono, mensajes, actualizado_at: new Date() });
+        .upsert({ chat_id: chatId, telefono, mensajes, actualizado_at: ahora });
 }
 
 /* ── ACUMULADOR DE MENSAJES ── */
@@ -112,6 +118,19 @@ lockFiles.forEach(file => {
 client.initialize();
 arrancarServidor();
 iniciarScheduler();
+
+/* ── LOG DE HORA ARGENTINA ──
+   Verificamos en consola que el servidor interpreta bien la zona horaria */
+function logHoraArgentina() {
+    const ahora = ahoraArgentina();
+    const str = ahora.toLocaleString('es-AR', {
+        weekday: 'short', day: '2-digit', month: '2-digit', year: 'numeric',
+        hour: '2-digit', minute: '2-digit', second: '2-digit'
+    });
+    console.log(`🕐 [Hora Argentina] ${str}`);
+}
+logHoraArgentina();
+setInterval(logHoraArgentina, 60 * 60 * 1000); /* cada 1 hora */
 
 /* Capturamos crashes para que no tire todo abajo */
 process.on('uncaughtException', (e) => console.error('🔥 [Crash evitado]:', e.message));

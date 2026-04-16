@@ -18,11 +18,15 @@ import { fileURLToPath } from 'url'; /* fileURLToPath es para obtener la ruta de
 import { createClient } from '@supabase/supabase-js'; /* createClient es para crear un cliente de supabase*/
 import { procesarPedidoDesdeChat } from './procesador.js'; /* procesarPedidoDesdeChat es para procesar el pedido*/
 import { client, whatsappListo } from './client.js'; /* client es para el cliente de whatsapp*/
-
 import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import * as dotenv from 'dotenv';
 dotenv.config();
+
+/* Helper: hora actual en Argentina (UTC-3) */
+function ahoraArgentina() {
+    return new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
+}
 
 if (!process.env.JWT_SECRET) {
     throw new Error('❌ JWT_SECRET no definida en tu archivo .env. Por seguridad, el servidor no puede arrancar.');
@@ -201,7 +205,9 @@ async function procesarTurno(origen = 'automático') {
         console.log(`\n── [${h.telefono}] ${h.mensajes.length} mensajes ──`);
 
         try {
-            const resultado = await procesarPedidoDesdeChat(h.telefono, historialTexto);
+            /* Usamos la hora del último mensaje acumulado como fecha real del pedido */
+            const fechaPedido = h.actualizado_at ? new Date(h.actualizado_at) : ahoraArgentina();
+            const resultado = await procesarPedidoDesdeChat(h.telefono, historialTexto, fechaPedido);
 
             if (resultado.success && resultado.cerrado) {
                 console.log(`   ✅ Pedido guardado`);
@@ -246,7 +252,7 @@ async function procesarTurno(origen = 'automático') {
     try {
         await supabase.from('logs_turnos').insert({
             origen,
-            fecha: inicio.toISOString(),
+            fecha: ahoraArgentina().toISOString(),
             duracion_segundos: duracionSeg,
             conversaciones: historiales.length,
             pedidos_guardados: pedidosGuardados,
@@ -418,7 +424,7 @@ app.post('/api/enviar-uno', async (req, res) => {
         const numero = telefono.replace(/\D/g, '') + '@c.us';
         await client.sendMessage(numero, mensaje);
         if (clienteId) {
-            await supabase.from('clientes').update({ ultimo_remarketing: new Date().toISOString() }).eq('id', clienteId);
+            await supabase.from('clientes').update({ ultimo_remarketing: ahoraArgentina().toISOString() }).eq('id', clienteId);
         }
         res.json({ ok: true });
     } catch (e) {
@@ -444,7 +450,7 @@ app.post('/api/enviar-todos', async (req, res) => {
         const lote = clientesAEnviar.slice(0, MAX_POR_LOTE);
         if (lote.length > 0) {
             const ids = lote.map(c => c.id);
-            await supabase.from('clientes').update({ ultimo_remarketing: new Date().toISOString() }).in('id', ids);
+            await supabase.from('clientes').update({ ultimo_remarketing: ahoraArgentina().toISOString() }).in('id', ids);
         }
 
         res.json({ ok: true, ...resultado });

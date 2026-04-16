@@ -20,7 +20,9 @@ const MODELOS_DISPONIBLES = [
 const genAI = new GoogleGenerativeAI(process.env.GEMINI_API_KEY);
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
 
-export async function procesarPedidoDesdeChat(telefono, historialChat) {
+export async function procesarPedidoDesdeChat(telefono, historialChat, fechaPedido) {
+    /* Si no viene fecha del historial, usamos ahora en Argentina como fallback */
+    const fecha = fechaPedido instanceof Date ? fechaPedido : new Date(new Date().toLocaleString('en-US', { timeZone: 'America/Argentina/Buenos_Aires' }));
     try {
         console.log(`\n--- 🤖 Procesando [${telefono}] ---`);
 
@@ -145,7 +147,7 @@ export async function procesarPedidoDesdeChat(telefono, historialChat) {
                 telefono,
                 nombre: data.cliente?.nombre || "Cliente WhatsApp",
                 direccion_frecuente: data.cliente?.direccion || "Sin dirección",
-                ultima_compra: new Date()
+                ultima_compra: fecha
             })
             .select()
             .single();
@@ -171,7 +173,7 @@ export async function procesarPedidoDesdeChat(telefono, historialChat) {
                 cliente_id: cliente.id,
                 monto_total: data.total_inferido || 0,
                 items_json: data.items,
-                fecha: new Date()
+                fecha: fecha
             });
 
         if (errP) {
