@@ -99,6 +99,7 @@ const requireAuth = (req, res, next) => {
 /* ── CONFIGURACIÓN DE TURNOS ── */
 let horaTurno1 = '14:22';
 let horaTurno2 = '23:30';
+let schedulerTimeout = null; /* referencia al timer activo — necesaria para cancelarlo al cambiar horarios */
 
 /* ── QR EN MEMORIA ──
    Cuando WhatsApp genera el QR lo guardamos acá.
@@ -278,6 +279,12 @@ async function procesarTurno(origen = 'automático') {
    SCHEDULER
    ============================================================ */
 export function iniciarScheduler() {
+    /* Cancelamos el timer anterior si existe (ej: al cambiar horarios desde el dashboard) */
+    if (schedulerTimeout) {
+        clearTimeout(schedulerTimeout);
+        schedulerTimeout = null;
+    }
+
     const proxEjecucion = () => {
         /* ── Usamos hora Argentina para no depender de la TZ del servidor ── */
         const ahora = ahoraArgentina();
@@ -292,7 +299,7 @@ export function iniciarScheduler() {
         if (horarios.length === 0) {
             /* Ambos turnos ya pasaron hoy — esperar 24h y volver a calcular */
             console.log('⏰ [Scheduler] Ambos turnos del día completados. Próxima revisión en 24h.');
-            setTimeout(proxEjecucion, 24 * 60 * 60 * 1000);
+            schedulerTimeout = setTimeout(proxEjecucion, 24 * 60 * 60 * 1000);
             return;
         }
 
@@ -300,7 +307,7 @@ export function iniciarScheduler() {
         const mins = Math.round(proxima / 60000);
         console.log(`⏰ [Scheduler] Próximo turno automático en ${mins} minuto(s).`);
 
-        setTimeout(async () => {
+        schedulerTimeout = setTimeout(async () => {
             await procesarTurno('automático');
             proxEjecucion(); /* recalcular para el siguiente turno */
         }, proxima);
@@ -366,7 +373,8 @@ app.post('/api/configurar-turnos', (req, res) => {
     }
     horaTurno1 = turno1;
     horaTurno2 = turno2;
-    console.log(`⏰ Turnos actualizados: ${turno1} y ${turno2}`);
+    console.log(`⏰ Turnos actualizados: ${turno1} y ${turno2} — reiniciando scheduler...`);
+    iniciarScheduler(); /* cancela el timer viejo y programa el nuevo */
     res.json({ ok: true });
 });
 
