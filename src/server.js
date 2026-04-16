@@ -279,21 +279,30 @@ async function procesarTurno(origen = 'automático') {
    ============================================================ */
 export function iniciarScheduler() {
     const proxEjecucion = () => {
-        const ahora = new Date();
-        const h = ahora.getHours(), m = ahora.getMinutes();
-        const horarios = [horaTurno1, horaTurno2].map(hh => {
-            const [hh_num, mm_num] = hh.split(':').map(Number);
-            const fecha = new Date();
+        /* ── Usamos hora Argentina para no depender de la TZ del servidor ── */
+        const ahora = ahoraArgentina();
+
+        const horarios = [horaTurno1, horaTurno2].map(horaStr => {
+            const [hh_num, mm_num] = horaStr.split(':').map(Number);
+            const fecha = ahoraArgentina(); /* base en hora Argentina */
             fecha.setHours(hh_num, mm_num, 0, 0);
             return fecha > ahora ? fecha : null;
         }).filter(Boolean);
 
-        if (horarios.length === 0) return 24 * 60 * 60 * 1000; // Próxima ejecución mañana
+        if (horarios.length === 0) {
+            /* Ambos turnos ya pasaron hoy — esperar 24h y volver a calcular */
+            console.log('⏰ [Scheduler] Ambos turnos del día completados. Próxima revisión en 24h.');
+            setTimeout(proxEjecucion, 24 * 60 * 60 * 1000);
+            return;
+        }
 
         const proxima = Math.min(...horarios.map(f => f - ahora));
+        const mins = Math.round(proxima / 60000);
+        console.log(`⏰ [Scheduler] Próximo turno automático en ${mins} minuto(s).`);
+
         setTimeout(async () => {
             await procesarTurno('automático');
-            proxEjecucion(); // Recalcular
+            proxEjecucion(); /* recalcular para el siguiente turno */
         }, proxima);
     };
     proxEjecucion();
