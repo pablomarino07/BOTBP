@@ -82,7 +82,7 @@ async function verificarEstado() {
       else { waBadge.textContent = '● Offline'; waBadge.className = 'wa-status-badge wa-offline'; }
     }
     const waLast = document.getElementById('waLastUpdate');
-    if (waLast) waLast.textContent = document.getElementById('lastUpdate').textContent;
+    if (waLast) waLast.textContent = new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' });
 
     if (data.turno1) document.getElementById('turno1Input').value = data.turno1;
     if (data.turno2) document.getElementById('turno2Input').value = data.turno2;
@@ -117,70 +117,243 @@ async function cargarQR() {
   }
 }
 
-/* ── Tabs ── */
+/* ── Navegación de Pestañas ── */
 function cambiarTab(tab, btn) {
-  document.querySelectorAll('.tab').forEach(b => b.classList.remove('active'));
   document.querySelectorAll('.page').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+  document.getElementById(`page-${tab}`).classList.add('active');
   btn.classList.add('active');
-  document.getElementById('page-' + tab).classList.add('active');
+
   document.getElementById('filters').style.display = tab === 'metricas' ? 'flex' : 'none';
+
+  // Apagar fondo ámbar si salimos de métricas
+  if (tab === 'metricas' && document.getElementById('compararCheck').checked) {
+    document.body.classList.add('comparativa-mode');
+  } else {
+    document.body.classList.remove('comparativa-mode');
+  }
+
   if (tab === 'whatsapp') cargarQR();
   if (tab === 'remarketing') actualizarVencidos();
-  if (tab === 'turnos') cargarLogsTurnos();
+  if (tab === 'turnos') {
+    cargarLogsTurnos();
+    cargarDescartados();
+  }
 }
 
-/* ── Filtros de métricas ── */
-function setFiltro(filtro, btn) {
-  filtroActual = filtro;
-  document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
+/* ── Filtros de métricas Avanzados ── */
+function cambiarFiltroSelect() {
+  const val = document.getElementById('filtroSelect').value;
+  document.getElementById('rangoPersonalizado').style.display = val === 'personalizado' ? 'flex' : 'none';
+  toggleComparar();
+}
+
+function toggleComparar() {
+  const chk = document.getElementById('compararCheck').checked;
+  const val = document.getElementById('filtroSelect').value;
+  document.getElementById('compararPersonalizado').style.display = (chk && val === 'personalizado') ? 'flex' : 'none';
   cargarDatos();
 }
 
-function getFechaDesde() {
-  const now = new Date();
-  if (filtroActual === 'hoy') { const d = new Date(now); d.setHours(0, 0, 0, 0); return d.toISOString(); }
-  if (filtroActual === 'semana') { const d = new Date(now); d.setDate(d.getDate() - 7); return d.toISOString(); }
-  if (filtroActual === 'mes') { const d = new Date(now); d.setDate(d.getDate() - 30); return d.toISOString(); }
-  return null;
+function getFechas() {
+  const select = document.getElementById('filtroSelect').value;
+  const hoy = new Date();
+  hoy.setHours(0, 0, 0, 0);
+
+  const finHoy = new Date(hoy);
+  finHoy.setHours(23, 59, 59, 999);
+
+  let desde, hasta, prevDesde, prevHasta;
+
+  if (select === 'hoy') {
+    desde = new Date(hoy); hasta = new Date(finHoy);
+    prevDesde = new Date(hoy); prevDesde.setDate(prevDesde.getDate() - 1);
+    prevHasta = new Date(finHoy); prevHasta.setDate(prevHasta.getDate() - 1);
+  } else if (select === 'ayer') {
+    desde = new Date(hoy); desde.setDate(desde.getDate() - 1);
+    hasta = new Date(finHoy); hasta.setDate(hasta.getDate() - 1);
+    prevDesde = new Date(desde); prevDesde.setDate(prevDesde.getDate() - 1);
+    prevHasta = new Date(hasta); prevHasta.setDate(prevHasta.getDate() - 1);
+  } else if (select === 'semana') {
+    desde = new Date(hoy); desde.setDate(desde.getDate() - 6);
+    hasta = new Date(finHoy);
+    prevDesde = new Date(desde); prevDesde.setDate(prevDesde.getDate() - 7);
+    prevHasta = new Date(hasta); prevHasta.setDate(prevHasta.getDate() - 7);
+  } else if (select === 'semana_pasada') {
+    const d = new Date(hoy);
+    const day = d.getDay() === 0 ? 7 : d.getDay();
+    hasta = new Date(hoy); hasta.setDate(hasta.getDate() - day);
+    hasta.setHours(23, 59, 59, 999);
+    desde = new Date(hasta); desde.setDate(desde.getDate() - 6);
+    desde.setHours(0, 0, 0, 0);
+    prevDesde = new Date(desde); prevDesde.setDate(prevDesde.getDate() - 7);
+    prevHasta = new Date(hasta); prevHasta.setDate(prevHasta.getDate() - 7);
+  } else if (select === 'mes') {
+    desde = new Date(hoy); desde.setDate(desde.getDate() - 29);
+    hasta = new Date(finHoy);
+    prevDesde = new Date(desde); prevDesde.setDate(prevDesde.getDate() - 30);
+    prevHasta = new Date(hasta); prevHasta.setDate(prevHasta.getDate() - 30);
+  } else if (select === 'mes_calendario') {
+    desde = new Date(hoy.getFullYear(), hoy.getMonth(), 1);
+    hasta = new Date(finHoy);
+    prevDesde = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+    prevHasta = new Date(hoy.getFullYear(), hoy.getMonth(), 0, 23, 59, 59, 999);
+  } else if (select === 'mes_calendario_pasado') {
+    desde = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 1);
+    hasta = new Date(hoy.getFullYear(), hoy.getMonth(), 0, 23, 59, 59, 999);
+    prevDesde = new Date(hoy.getFullYear(), hoy.getMonth() - 2, 1);
+    prevHasta = new Date(hoy.getFullYear(), hoy.getMonth() - 1, 0, 23, 59, 59, 999);
+  } else if (select === 'personalizado') {
+    desde = document.getElementById('fechaDesde').value ? new Date(document.getElementById('fechaDesde').value + 'T00:00:00') : new Date(hoy);
+    hasta = document.getElementById('fechaHasta').value ? new Date(document.getElementById('fechaHasta').value + 'T23:59:59') : new Date(finHoy);
+    prevDesde = document.getElementById('compDesde').value ? new Date(document.getElementById('compDesde').value + 'T00:00:00') : null;
+    prevHasta = document.getElementById('compHasta').value ? new Date(document.getElementById('compHasta').value + 'T23:59:59') : null;
+  } else if (select === 'todo') {
+    return { desde: null, hasta: null, prevDesde: null, prevHasta: null };
+  }
+
+  return {
+    desde: desde ? desde.toISOString() : null,
+    hasta: hasta ? hasta.toISOString() : null,
+    prevDesde: prevDesde ? prevDesde.toISOString() : null,
+    prevHasta: prevHasta ? prevHasta.toISOString() : null
+  };
 }
 
 /* ── Datos / KPIs ── */
 async function cargarDatos() {
   try {
-    document.getElementById('lastUpdate').textContent = 'Actualizando...';
-    const desde = getFechaDesde();
-    const data = await api('GET', '/metricas' + (desde ? `?desde=${desde}` : ''));
-    if (!data.ok) throw new Error(data.error);
-    renderKPIs(data.pedidos, data.clientes);
-    renderChartVentas(data.pedidos);
-    renderChartProductos(data.pedidos);
-    renderChartHoras(data.pedidos);
-    renderTablaClientes(data.pedidos, data.clientes);
-    document.getElementById('lastUpdate').textContent = `Actualizado ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`;
+    document.getElementById('lastUpdate').textContent = 'Sincronizando...';
+
+    const { desde, hasta, prevDesde, prevHasta } = getFechas();
+    const comparar = document.getElementById('compararCheck').checked;
+
+    let url = '/metricas?';
+    if (desde) url += `desde=${desde}&`;
+    if (hasta) url += `hasta=${hasta}&`;
+
+    const p1 = api('GET', url);
+    let p2 = null;
+
+    if (comparar && prevDesde && prevHasta) {
+      let prevUrl = `/metricas?desde=${prevDesde}&hasta=${prevHasta}`;
+      p2 = api('GET', prevUrl);
+
+      document.body.classList.add('comparativa-mode');
+      const txt = document.getElementById('filtroSelect').options[document.getElementById('filtroSelect').selectedIndex].text;
+      const b = document.getElementById('comparativaBanner');
+      if (b) {
+        b.style.display = 'block';
+        b.innerHTML = `<strong>Modo Comparativo:</strong> Analizando ${txt} (${formatoCorta(desde)} - ${formatoCorta(hasta)}) vs. Anterior (${formatoCorta(prevDesde)} - ${formatoCorta(prevHasta)}).`;
+      }
+    } else {
+      document.body.classList.remove('comparativa-mode');
+      if (document.getElementById('comparativaBanner')) document.getElementById('comparativaBanner').style.display = 'none';
+    }
+
+    const [data1, data2] = p2 ? await Promise.all([p1, p2]) : [await p1, null];
+
+    if (!data1.ok) throw new Error(data1.error);
+
+    renderKPIs(data1.pedidos, data1.clientes, data2 ? data2.pedidos : null);
+    renderChartVentas(data1.pedidos);
+    renderChartProductos(data1.pedidos);
+    renderChartHoras(data1.pedidos);
+    renderTablaClientes(data1.pedidos, data1.clientes);
+    document.getElementById('lastUpdate').textContent = `Métricas sincronizadas: ${new Date().toLocaleTimeString('es-AR', { hour: '2-digit', minute: '2-digit' })}`;
   } catch { document.getElementById('lastUpdate').textContent = '❌ Error'; }
+}
+
+function renderTendencia(elementId, actual, anterior, esDinero = false) {
+  const el = document.getElementById(elementId);
+  if (!el) return;
+  if (anterior === null || anterior === undefined || anterior === 0) {
+    el.style.display = 'none';
+    return;
+  }
+
+  const dif = actual - anterior;
+  const poc = (dif / anterior) * 100;
+
+  el.style.display = 'inline-flex';
+  el.className = 'kpi-trend ' + (poc > 0 ? 'trend-up' : (poc < 0 ? 'trend-down' : 'trend-neutral'));
+
+  const txt = Math.abs(poc).toFixed(1) + '%';
+  const numDelta = esDinero ? fmt(Math.abs(dif)) : Math.abs(dif);
+
+  if (poc > 0) el.innerHTML = `▲ ${txt} (+${numDelta})`;
+  else if (poc < 0) el.innerHTML = `▼ ${txt} (-${numDelta})`;
+  else el.innerHTML = `— 0%`;
 }
 
 function fmt(n) { return '$' + Math.round(n).toLocaleString('es-AR'); }
 
-function renderKPIs(pedidos, clientes) {
+function formatoCorta(isoStr) {
+  if (!isoStr) return '';
+  const d = new Date(isoStr);
+  return d.toLocaleDateString('es-AR', { day: '2-digit', month: 'short' }).replace('.', '');
+}
+
+function renderKPIs(pedidos, clientes, pedidosAnteriores = null) {
   const total = pedidos.reduce((s, p) => s + (p.monto_total || 0), 0);
   const ticket = pedidos.length ? total / pedidos.length : 0;
   const cu = new Set(pedidos.map(p => p.cliente_id)).size;
-  const hs = {}; pedidos.forEach(p => { const h = new Date(p.fecha).getHours(); hs[h] = (hs[h] || 0) + 1; });
-  const hp = Object.entries(hs).sort((a, b) => b[1] - a[1])[0];
+
+  if (pedidosAnteriores && document.getElementById('compararCheck').checked) {
+    const totalPrev = pedidosAnteriores.reduce((s, p) => s + (p.monto_total || 0), 0);
+    const ticketPrev = pedidosAnteriores.length ? totalPrev / pedidosAnteriores.length : 0;
+    renderTendencia('trendVentas', total, totalPrev, true);
+    renderTendencia('trendPedidos', pedidos.length, pedidosAnteriores.length, false);
+    renderTendencia('trendTicket', ticket, ticketPrev, true);
+  } else {
+    ['trendVentas', 'trendPedidos', 'trendTicket'].forEach(id => {
+      if (document.getElementById(id)) document.getElementById(id).style.display = 'none';
+    });
+  }
+
+  const mediodia = pedidos.filter(p => {
+    const h = new Date(p.fecha).getUTCHours();
+    return h >= 11 && h <= 15;
+  });
+
+  const noche = pedidos.filter(p => {
+    const d = new Date(p.fecha);
+    const h = d.getUTCHours();
+    const m = d.getUTCMinutes();
+    return (h >= 20 && h <= 22) || (h === 23 && m <= 30);
+  });
+
+  const getPromedio = (arr) => {
+    if (!arr.length) return '—';
+    const totalMins = arr.reduce((sum, p) => {
+      const d = new Date(p.fecha);
+      return sum + (d.getUTCHours() * 60 + d.getUTCMinutes());
+    }, 0);
+    const avg = Math.round(totalMins / arr.length);
+    const h = Math.floor(avg / 60);
+    const m = (avg % 60).toString().padStart(2, '0');
+    return `${h}:${m}hs`;
+  };
+
+  const hpMediodia = getPromedio(mediodia);
+  const hpNoche = getPromedio(noche);
+
+  const txtPeriodo = document.getElementById('filtroSelect').options[document.getElementById('filtroSelect').selectedIndex].text.toLowerCase();
+
   document.getElementById('kpiVentas').textContent = fmt(total);
-  document.getElementById('kpiVentasSub').textContent = filtroActual === 'hoy' ? 'hoy' : filtroActual === 'semana' ? 'últimos 7 días' : filtroActual === 'mes' ? 'últimos 30 días' : 'total histórico';
+  document.getElementById('kpiVentasSub').textContent = txtPeriodo;
   document.getElementById('kpiPedidos').textContent = pedidos.length;
   document.getElementById('kpiTicket').textContent = fmt(ticket);
   document.getElementById('kpiClientes').textContent = cu;
   document.getElementById('kpiClientesSub').textContent = `de ${clientes.length} totales`;
-  document.getElementById('kpiHora').textContent = hp ? `${hp[0]}hs` : '—';
+  document.getElementById('kpiHora').textContent = hpMediodia === '—' && hpNoche === '—' ? '—' : `${hpMediodia} | ${hpNoche}`;
+  document.getElementById('kpiHora').style.fontSize = '1.3rem';
+  document.getElementById('kpiHora').nextElementSibling.textContent = 'promedio mediodía | noche';
 }
 
 /* ── Charts ── */
 function renderChartVentas(pedidos) {
-  const pd = {}; pedidos.forEach(p => { const d = new Date(p.fecha).toLocaleDateString('es-AR', { day: '2-digit', month: '2-digit' }); pd[d] = (pd[d] || 0) + (p.monto_total || 0); });
+  const pd = {}; pedidos.forEach(p => { const dObj = new Date(p.fecha); const dia = dObj.getUTCDate().toString().padStart(2, '0'); const mes = (dObj.getUTCMonth() + 1).toString().padStart(2, '0'); const d = `${dia}/${mes}`; pd[d] = (pd[d] || 0) + (p.monto_total || 0); });
   const labels = Object.keys(pd).slice(-14);
   if (charts.ventas) charts.ventas.destroy();
   charts.ventas = new Chart(document.getElementById('chartVentas'), { type: 'bar', data: { labels, datasets: [{ data: labels.map(l => pd[l]), backgroundColor: '#f5631a99', borderColor: '#f5631a', borderWidth: 1, borderRadius: 4 }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#7a7568', font: { size: 10 } }, grid: { color: '#2e2c26' } }, y: { ticks: { color: '#7a7568', font: { size: 10 }, callback: v => '$' + v.toLocaleString('es-AR') }, grid: { color: '#2e2c26' } } } } });
@@ -195,9 +368,23 @@ function renderChartProductos(pedidos) {
 }
 
 function renderChartHoras(pedidos) {
-  const hs = Array(24).fill(0); pedidos.forEach(p => { hs[new Date(p.fecha).getHours()]++; });
+  const hs = Array(24).fill(0); pedidos.forEach(p => { hs[new Date(p.fecha).getUTCHours()]++; });
   if (charts.horas) charts.horas.destroy();
-  charts.horas = new Chart(document.getElementById('chartHoras'), { type: 'line', data: { labels: Array.from({ length: 24 }, (_, i) => `${i}hs`), datasets: [{ data: hs, borderColor: '#f5c518', backgroundColor: '#f5c51820', fill: true, tension: .4, pointRadius: 3, pointBackgroundColor: '#f5c518' }] }, options: { responsive: true, maintainAspectRatio: false, plugins: { legend: { display: false } }, scales: { x: { ticks: { color: '#7a7568', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#2e2c26' } }, y: { ticks: { color: '#7a7568', font: { size: 10 }, stepSize: 1 }, grid: { color: '#2e2c26' } } } } });
+  charts.horas = new Chart(document.getElementById('chartHoras'), {
+    type: 'line', data: {
+      labels: Array.from({ length: 24 },
+        (_, i) => `${i}hs`), datasets: [{
+          data: hs, borderColor: '#f5c518', backgroundColor: '#f5c51820',
+          fill: true, tension: .4, pointRadius: 3, pointBackgroundColor: '#f5c518'
+        }]
+    }, options: {
+      responsive: true, maintainAspectRatio: false, plugins:
+        { legend: { display: false } }, scales: {
+          x: { ticks: { color: '#7a7568', font: { size: 9 }, maxTicksLimit: 12 }, grid: { color: '#2e2c26' } }
+          , y: { ticks: { color: '#7a7568', font: { size: 10 }, stepSize: 1 }, grid: { color: '#2e2c26' } }
+        }
+    }
+  });
 }
 
 function renderTablaClientes(pedidos, clientes) {
@@ -242,7 +429,7 @@ async function cargarLogsTurnos() {
   try {
     const data = await api('GET', '/logs-turnos');
     if (!data.ok || !data.logs?.length) { el.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:12px">Sin historial aún.</div>'; return; }
-    el.innerHTML = data.logs.map(l => `<div class="log-item"><div class="log-fecha">${new Date(l.fecha).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</div><span class="badge-yellow" style="font-size:.72rem">${l.origen}</span><div class="log-stats"><span class="badge">${l.conversaciones} conv.</span><span class="badge-green">${l.pedidos_guardados} pedidos</span>${l.errores > 0 ? `<span class="badge-red">${l.errores} err</span>` : ''}</div></div>`).join('');
+    el.innerHTML = data.logs.map(l => `<div class="log-item"><div class="log-fecha">${new Date(l.fecha).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</div><span class="badge-yellow" style="font-size:.72rem">${l.origen}</span><div class="log-stats"><span class="badge">${l.conversaciones || 0} Conv. Totales</span><span class="badge-green">${l.pedidos_guardados} pedidos</span>${l.errores > 0 ? `<span class="badge-red">${l.errores} err</span>` : ''}</div></div>`).join('');
   } catch { el.innerHTML = '<div style="color:var(--muted);font-size:.82rem;padding:12px">Error cargando logs.</div>'; }
 }
 
@@ -404,4 +591,56 @@ setInterval(() => {
   if (document.getElementById('page-remarketing').classList.contains('active')) {
     actualizarVencidos();
   }
+  if (document.getElementById('page-turnos').classList.contains('active')) {
+    cargarDescartados();
+  }
 }, 120000);
+
+/* ── Chats Descartados ── */
+async function cargarDescartados() {
+  const el = document.getElementById('listaDescartados');
+  if (!el) return;
+  el.innerHTML = '<div class="loading" style="padding: 20px;"><div class="spinner"></div> Cargando...</div>';
+  try {
+    const data = await api('GET', '/chats-descartados');
+    if (!data.ok || !data.descartados?.length) {
+      el.innerHTML = '<div style="padding:40px 20px; text-align:center; color:var(--muted);">No hay chats descartados en los últimos 7 días.</div>';
+      return;
+    }
+
+    el.innerHTML = data.descartados.map(c => {
+      // Intentamos procesar el formato del historial que suele venir como arreglo de strings
+      const msgsData = Array.isArray(c.mensajes) ? c.mensajes : (typeof c.mensajes === 'string' ? c.mensajes.split('\\n') : []);
+      let msgsHtml = '';
+      if (msgsData.length > 0) {
+        msgsHtml = msgsData.map(m => {
+          if (!m.trim()) return '';
+          const isBot = m.toLowerCase().includes('==>');
+          return `<div style="margin-bottom: 8px; padding: 8px 12px; border-radius: 8px; background: ${isBot ? 'var(--dark-lighter)' : '#f5631a1a'}; border: 1px solid var(--glass-border); width: fit-content; max-width: 85%; ${!isBot ? 'margin-left: auto; border-color: #f5631a40;' : ''}">${m.replace(/==>|\\*\\*Usuario\\*\\*:/i, '').trim()}</div>`;
+        }).join('');
+      } else {
+        msgsHtml = `<div style="color:var(--muted)">Sin registro de mensajes</div>`;
+      }
+
+      return `
+      <div class="cliente-vencido" style="flex-direction: column; align-items: stretch; padding: 15px; border-bottom: 1px solid var(--glass-border); background: transparent;">
+        <div style="display: flex; justify-content: space-between; align-items: center; cursor: pointer" onclick="document.getElementById('msg-${c.id}').style.display = document.getElementById('msg-${c.id}').style.display === 'none' ? 'block' : 'none'">
+            <div style="display: flex; align-items: center; gap: 12px">
+                <div class="client-avatar" style="background: var(--dark-lighter)">💬</div>
+                <div>
+                   <div class="cv-nombre">${c.telefono}</div>
+                   <div class="cv-detalle">📅 ${new Date(c.fecha).toLocaleString('es-AR', { day: '2-digit', month: '2-digit', hour: '2-digit', minute: '2-digit' })}</div>
+                </div>
+            </div>
+            <button class="btn-ghost btn-sm" style="pointer-events: none;">Ver Chat ↓</button>
+        </div>
+        <div id="msg-${c.id}" style="display: none; margin-top: 15px; padding: 15px; background: var(--dark-bg); border-radius: 8px; font-size: 0.9rem;">
+           ${msgsHtml}
+        </div>
+      </div>`;
+    }).join('');
+  } catch (e) {
+    el.innerHTML = `<div class="error-msg" style="margin: 20px;">Error cargando descartados: ${e.message}</div>`;
+  }
+}
+

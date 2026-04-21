@@ -52,6 +52,7 @@ const limiter = rateLimit({
 app.use('/api/login', limiter);
 
 /* Servimos el dashboard desde la carpeta public/ */
+app.get('/', (req, res) => res.redirect('/login.html'));
 app.use(express.static(path.join(__dirname, '..', 'public')));
 
 const supabase = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_KEY);
@@ -216,6 +217,17 @@ async function procesarTurno(origen = 'automático') {
                 detalles.push({ telefono: h.telefono, estado: 'pedido_guardado' });
             } else if (resultado.success && !resultado.cerrado) {
                 console.log(`   ⏭️  Sin pedido — descartado`);
+                
+                try {
+                    await supabase.from('chats_descartados').insert({
+                        telefono: h.telefono,
+                        mensajes: h.mensajes,
+                        fecha: fechaPedido.toISOString()
+                    });
+                } catch (e) {
+                    console.warn(`   ⚠️ Error guardando chat descartado:`, e.message);
+                }
+
                 descartados++;
                 detalles.push({ telefono: h.telefono, estado: 'descartado' });
             } else {
@@ -251,19 +263,29 @@ async function procesarTurno(origen = 'automático') {
        Así el jefe puede ver en el dashboard cuándo se procesó
        y cuántos pedidos salieron de cada turno */
     try {
-        await supabase.from('logs_turnos').insert({
+        const { error: logError } = await supabase.from('turnos').insert({
             origen,
-            fecha: ahoraArgentina().toISOString(),
-            duracion_segundos: duracionSeg,
             conversaciones: historiales.length,
             pedidos_guardados: pedidosGuardados,
             descartados,
             errores,
-            detalles
+            fecha: ahoraArgentina().toISOString()
         });
+        if (logError) {
+            console.warn('⚠️  No se pudo guardar el log del turno:', logError.message);
+        } else {
+            console.log('📝 Log del turno guardado en Supabase.');
+        }
     } catch (e) {
         /* Si falla el log no es crítico — solo lo avisamos */
-        console.warn('⚠️  No se pudo guardar el log del turno (¿existe la tabla logs_turnos?)');
+        console.warn('⚠️  Excepción al guardar el log del turno:', e.message);
+    }
+
+    try {
+        const haceUnaSemana = new Date(ahoraArgentina().getTime() - 7 * 24 * 60 * 60 * 1000).toISOString();
+        await supabase.from('chats_descartados').delete().lte('fecha', haceUnaSemana);
+    } catch (e) {
+        console.warn('⚠️  Excepción al limpiar chats descartados:', e.message);
     }
 
     console.log(`\n${'═'.repeat(50)}`);
@@ -386,10 +408,11 @@ app.post('/api/procesar-ahora', async (req, res) => {
 
 /* GET /api/metricas — métricas para el dashboard (Supabase solo desde acá) */
 app.get('/api/metricas', async (req, res) => {
-    const { desde } = req.query;
+    const { desde, hasta } = req.query;
     try {
         let q = supabase.from('pedidos').select('id,monto_total,items_json,fecha,cliente_id').order('fecha', { ascending: false });
         if (desde) q = q.gte('fecha', desde);
+        if (hasta) q = q.lte('fecha', hasta);
         const { data: pedidos, error: errP } = await q;
         const { data: clientes, error: errC } = await supabase.from('clientes').select('id,nombre,telefono,ultima_compra');
         if (errP || errC) throw new Error(errP?.message || errC?.message);
@@ -421,7 +444,7 @@ app.get('/api/clientes-vencidos', async (req, res) => {
 app.get('/api/logs-turnos', async (req, res) => {
     try {
         const { data, error } = await supabase
-            .from('logs_turnos')
+            .from('turnos')
             .select('*')
             .order('fecha', { ascending: false })
             .limit(20);
@@ -476,6 +499,19 @@ app.post('/api/enviar-todos', async (req, res) => {
     }
 });
 
+/* GET /api/chats-descartados — obtener los chats ignorados por la IA */
+app.get('/api/chats-descartados', async (req, res) => {
+    try {
+        const { data, error } = await supabase
+            .from('chats_descartados')
+            .select('*')
+            .order('fecha', { ascending: false });
+        if (error) throw error;
+        res.json({ ok: true, descartados: data });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
 
 /* ── ARRANQUE ── */
 export function arrancarServidor() {

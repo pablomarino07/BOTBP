@@ -18,14 +18,14 @@
 
   <!-- ── TOPNAV ── -->
   <nav class="topnav">
-    <div class="nav-logo">
+    <div class="nav-logo" onclick="window.location.href='/dashboard.html'" style="cursor: pointer;" title="Ir al inicio">
       <div class="nav-logo-text">Big<span>Pizza-Paraná</span></div>
     </div>
 
     <div class="nav-links">
       <button class="tab active" onclick="cambiarTab('metricas',this)">Métricas</button>
       <button class="tab" onclick="cambiarTab('whatsapp',this)">WhatsApp</button>
-      <button class="tab" onclick="cambiarTab('turnos',this)">Turnos</button>
+      <button class="tab" onclick="cambiarTab('turnos',this)">IA-Procesado</button>
       <button class="tab" onclick="cambiarTab('remarketing',this)">Remarketing</button>
     </div>
 
@@ -34,7 +34,6 @@
         <div class="dot" id="serverDot"></div>
         <span id="serverEstado">Conectando...</span>
       </div>
-      <div class="last-update" id="lastUpdate">—</div>
       <div class="user-info">
         <span class="user-email" id="userEmail"></span>
         <button class="btn-ghost btn-sm" id="btnLogout" onclick="cerrarSesion()">Salir →</button>
@@ -43,36 +42,92 @@
   </nav>
 
   <!-- ── FILTROS (solo en métricas) ── -->
-  <div class="filters" id="filters">
-    <button class="filter-btn active" onclick="setFiltro('hoy',this)">Hoy</button>
-    <button class="filter-btn" onclick="setFiltro('semana',this)">Esta semana</button>
-    <button class="filter-btn" onclick="setFiltro('mes',this)">Este mes</button>
-    <button class="filter-btn" onclick="setFiltro('todo',this)">Todo</button>
+  <div class="filters-modern" id="filters">
+    <div class="fm-col" style="flex: 1;">
+      <label class="fm-label">Período de análisis</label>
+      <select id="filtroSelect" class="fm-select" onchange="cambiarFiltroSelect()">
+        <option value="hoy">Hoy</option>
+        <option value="ayer">Ayer</option>
+        <option value="semana">Últimos 7 días</option>
+        <option value="semana_pasada">Semana anterior</option>
+        <option value="mes">Últimos 30 días</option>
+        <option value="mes_calendario">Este mes</option>
+        <option value="mes_calendario_pasado">Mes pasado</option>
+        <option value="todo">Todo el historial</option>
+        <option value="personalizado">Personalizado...</option>
+      </select>
+    </div>
+
+    <!-- Fechas Personalizadas (Oculto por defecto) -->
+    <div class="fm-col" id="rangoPersonalizado" style="display:none; flex: 1.5;">
+      <label class="fm-label">Fechas personalizadas</label>
+      <div class="fm-date-row">
+        <span>Desde</span> <input type="date" class="fm-date" id="fechaDesde" onchange="cargarDatos()">
+        <span>Hasta</span> <input type="date" class="fm-date" id="fechaHasta" onchange="cargarDatos()">
+      </div>
+    </div>
+
+    <!-- Switch de Comparación -->
+    <div class="fm-col fm-compare-box">
+      <label class="fm-label">Comparativa</label>
+      <div class="fm-toggle-row">
+        <label class="fm-switch">
+          <input type="checkbox" id="compararCheck" onchange="toggleComparar()">
+          <span class="fm-slider"></span>
+        </label>
+        <div style="display:flex; align-items:center;">
+          <span class="fm-toggle-text">Comparar vs Anterior</span>
+          <div class="fm-tooltip-wrap">
+            <span style="font-size:.8rem; margin-left:6px; color:var(--muted)">ⓘ</span>
+            <div class="fm-tooltip-text">Compara tus métricas actuales contra el período anterior equivalente para medir crecimiento.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Comparación Personalizada (Oculto por defecto) -->
+    <div class="fm-col" id="compararPersonalizado" style="display:none; flex: 1.5;">
+      <label class="fm-label" style="color:var(--orange)">Comparar contra (Personalizado)</label>
+      <div class="fm-date-row">
+        <span>Desde</span> <input type="date" class="fm-date" id="compDesde" onchange="cargarDatos()">
+        <span>Hasta</span> <input type="date" class="fm-date" id="compHasta" onchange="cargarDatos()">
+      </div>
+    </div>
   </div>
 
   <main>
 
     <!-- ══ MÉTRICAS ══ -->
     <div class="page active" id="page-metricas">
-      <div class="page-header">
-        <div class="page-title">Métricas <span>Ventas</span></div>
-        <div class="page-sub">Resumen de pedidos y performance del bot</div>
+      <div class="page-header" style="display: flex; justify-content: space-between; align-items: flex-end;">
+        <div>
+          <div class="page-title">Métricas <span>Ventas</span></div>
+          <div class="page-sub">Resumen de pedidos y performance del bot</div>
+        </div>
+        <div class="last-update" id="lastUpdate" style="margin-bottom: 5px;">—</div>
       </div>
+      
+      <!-- Cartel Dinámico Ámbar (Modo Rayos X) -->
+      <div id="comparativaBanner" class="comparativa-banner" style="display:none;"></div>
+
       <div class="kpis">
         <div class="kpi">
           <div class="kpi-label">Ventas totales</div>
           <div class="kpi-value highlight" id="kpiVentas">—</div>
           <div class="kpi-sub" id="kpiVentasSub"></div>
+          <div class="kpi-trend" id="trendVentas"></div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Pedidos</div>
           <div class="kpi-value" id="kpiPedidos">—</div>
           <div class="kpi-sub">registrados</div>
+          <div class="kpi-trend" id="trendPedidos"></div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Ticket promedio</div>
           <div class="kpi-value" id="kpiTicket">—</div>
           <div class="kpi-sub">por pedido</div>
+          <div class="kpi-trend" id="trendTicket"></div>
         </div>
         <div class="kpi">
           <div class="kpi-label">Clientes únicos</div>
@@ -221,9 +276,24 @@
       </div>
 
       <div class="card">
-        <div class="card-title">Historial de turnos</div>
+        <div class="card-title">Historial de procesamiento</div>
         <div id="logsTurnos">
           <div class="loading">
+            <div class="spinner"></div> Cargando...
+          </div>
+        </div>
+      </div>
+
+      <div class="card" style="margin-top: 20px; padding: 0; overflow: hidden;">
+        <div style="padding: 24px; border-bottom: 1px solid var(--glass-border); display: flex; justify-content: space-between; align-items: center;">
+            <div>
+              <div class="card-title" style="margin: 0;">Chats Descartados</div>
+              <div style="font-size: 0.85rem; color: var(--muted); margin-top: 4px;">Historial de conversaciones ignoradas por la IA</div>
+            </div>
+            <button class="btn-ghost" style="padding:4px 12px;font-size:0.8rem;white-space:nowrap;" onclick="cargarDescartados()">🔄 Refrescar</button>
+        </div>
+        <div id="listaDescartados" style="max-height: 400px; overflow-y: auto;">
+          <div class="loading" style="padding: 20px;">
             <div class="spinner"></div> Cargando...
           </div>
         </div>

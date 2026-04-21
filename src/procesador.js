@@ -132,6 +132,21 @@ export async function procesarPedidoDesdeChat(telefono, historialChat, fechaPedi
             return { success: false, error: "JSON_PARSE_ERROR" };
         }
 
+        /* ── DETECCIÓN DE QUEJAS ── */
+        if (data.queja_detectada === true || data.queja_detectada === "true") {
+            console.log(`   🚨 Queja detectada: ${data.motivo_queja}`);
+            try {
+                await supabase.from('quejas').insert({
+                    telefono,
+                    motivo_queja: data.motivo_queja || 'Sin motivo especificado',
+                    historial_chat: historialChat,
+                    fecha: fecha.toISOString()
+                });
+            } catch (e) {
+                console.warn(`   ⚠️ Error guardando queja en la DB:`, e.message);
+            }
+        }
+
         if (!data.pedido_cerrado) {
             console.log("ℹ️  Sin pedido detectable en esta conversación.");
             return { success: true, cerrado: false };
