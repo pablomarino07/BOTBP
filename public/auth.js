@@ -1,7 +1,18 @@
 /* ============================================================
-   auth.js — Autenticación con JWT propio (sin Supabase Auth)
-   Usuario y contraseña se configuran en el .env del servidor.
-   Cargado en: login.html y dashboard.html
+   Este script tiene la funcionalidad de gestionar la seguridad 
+   y autenticación en el lado del cliente (Frontend) mediante el 
+   uso de JSON Web Tokens (JWT).
+
+   Funciones:
+   - guardarToken, obtenerToken, decodificarToken: manipulación 
+     del LocalStorage para la persistencia de la sesión.
+   - verificarSesion: control de acceso en las vistas protegidas,
+     redirección automática al login si está expirado o no existe.
+   - iniciarSesion, cerrarSesion: llamadas a la API del backend.
+   
+   Utilizando las herramientas:
+   - Fetch API nativa
+   - LocalStorage Web API
    ============================================================ */
 
 const AUTH_TOKEN_KEY = 'bp_auth_token';

@@ -1,10 +1,18 @@
 /* ============================================================
-   client.js
-   Cliente ÚNICO de WhatsApp para toda la aplicación.
-   Lo importan whatsapp.js, server.js y cualquier módulo
-   que necesite mandar o recibir mensajes.
-   Un solo Chromium corriendo = mucho menos RAM.
+   Este script tiene la funcionalidad de inicializar y mantener 
+   un único cliente de WhatsApp (Puppeteer/Chromium) para toda 
+   la aplicación. Actúa como el punto central de conexión y 
+   reconexión automática.
+
+   Funciones (eventos config):
+   - Configuración inicial de puppeteer
+   - Eventos 'ready' y 'disconnected'
+   - Reconexión con backoff/timeout
+   
+   Utilizando las herramientas:
+   - whatsapp-web.js (Client, LocalAuth)
    ============================================================ */
+
 
 import pkg from 'whatsapp-web.js';
 const { Client, LocalAuth } = pkg;  /* local auth supuestamente par aguardar la sesion de whatsapp*/

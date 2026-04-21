@@ -1,7 +1,18 @@
 /* ============================================================
-   procesador.js — CEREBRO del bot
-   Recibe un historial de chat, llama a Gemini y guarda el
-   pedido en Supabase si la IA detecta que está cerrado.
+   Este script tiene la funcionalidad de procesar historiales de 
+   chat de WhatsApp, enviarlos a la IA para inferir intenciones 
+   (pedidos o quejas), extraer datos estructurados y guardarlos 
+   en la base de datos. Representa el "cerebro" analítico del bot.
+
+   Funciones:
+   - procesarPedidoDesdeChat: Orquesta la consulta al menú, la
+     llamada a la IA con estrategia de fallback (varios modelos) 
+     y la persistencia en BD (clientes, pedidos, quejas).
+   
+   Utilizando las herramientas:
+   - @google/generative-ai
+   - @supabase/supabase-js
+   - dotenv
    ============================================================ */
 
 import { GoogleGenerativeAI } from "@google/generative-ai";  /* importamos la libreria de gemini*/

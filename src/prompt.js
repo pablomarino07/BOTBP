@@ -1,3 +1,16 @@
+/* ============================================================
+   Este script tiene la funcionalidad de almacenar el prompt del 
+   sistema (instrucciones base) que se le envía a la Inteligencia 
+   Artificial (Gemini) para indicarle cómo debe comportarse.
+
+   Funciones:
+   - Exporta la constante SYSTEM_PROMPT que determina las reglas
+     del procesamiento de lenguaje natural, normativas y esquemas
+     del JSON esperado.
+   
+   Utilizando las herramientas:
+   - Template Strings de JavaScript
+   ============================================================ */
 // prompt.js
 export const SYSTEM_PROMPT = `
 Eres un experto en logística de pizzerías argentinas. 

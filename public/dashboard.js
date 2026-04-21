@@ -1,5 +1,19 @@
 /* ============================================================
-   dashboard.js — Lógica del Dashboard Big Pizza PARANA
+   Este script tiene la funcionalidad de controlar toda la 
+   interactividad del panel de administración (Dashboard Frontend),
+   consumiendo la API del servidor y renderizando métricas.
+
+   Funciones:
+   - renderKPIs, renderChartVentas, renderTablaClientes, etc.: 
+     Generan y re-inyectan los componentes visuales de data de ventas.
+   - getFechas, cargarDatos: Filtrado de fechas y comparativas avanzadas.
+   - enviarUno, enviarTodos, actualizarVencidos: Manejo de Remarketing.
+   - verificarEstado, cargarQR: Estado de la conexión al bot.
+   
+   Utilizando las herramientas:
+   - Chart.js (gráficos)
+   - QRCode.js (renderizado de qr frontend)
+   - Fetch API nativa (consultas asíncronas)
    ============================================================ */
 
 const API = '/api';

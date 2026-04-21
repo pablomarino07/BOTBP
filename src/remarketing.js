@@ -1,13 +1,13 @@
 /* ============================================================
-   remarketing.js
-   El remarketing se maneja desde el dashboard (pestaña 📣 Remarketing).
-   El empleado escribe el mensaje con {nombre}, elige los clientes
-   sin comprar hace X días y hace clic en "Enviar a todos".
+   Este script tiene la funcionalidad de documentar el mecanismo 
+   y dependencias del sistema de remarketing, sirviendo como mapa 
+   o referencia (actualmente sin lógica de código propio ejecutable).
 
-   Los endpoints que lo manejan están en server.js:
-   - POST /api/enviar-uno   → envía a un cliente individual
-   - POST /api/enviar-todos → envía a toda la lista con cola espaciada
-
-   Una posibilidad en el futuro es que una ia escriba el mensaje de remarketing pero por ahora 
-   a patricia sosa
+   Funciones/Lógica documentada:
+   - Remarketing manual manejado desde el Dashboard y procesado 
+     por endpoints (/api/enviar-uno y /api/enviar-todos) en server.js.
+   - Se menciona que a futuro puede integrarse IA generativa.
+   
+   Utilizando las herramientas:
+   - N/A (Archivo de referencia y notas de arquitectura)
    ============================================================ */

@@ -1,8 +1,20 @@
 /* ============================================================
-   whatsapp.js
-   PUNTO DE ENTRADA ÚNICO del sistema.
-   Arranca todo: WhatsApp, servidor, scheduler.
-   Solo acumula mensajes — no llama a la IA en tiempo real.
+   Este script tiene la funcionalidad de ser el punto de entrada 
+   (entrypoint) principal de la aplicación. Inicializa los servicios 
+   core y actúa como un recolector base de mensajes.
+
+   Funciones:
+   - Arrancar y coordinar todos los módulos: WhatsApp web client, 
+     servidor Express, y Scheduler de turnos.
+   - Event Listeners ('qr', 'ready', 'message') para capturar
+     y guardar historiales de chat en la base de datos sin invocar 
+     a la IA en tiempo real, garantizando rápida respuesta.
+     
+   Utilizando las herramientas:
+   - whatsapp-web.js (vía client exportado)
+   - qrcode-terminal
+   - @supabase/supabase-js
+   - modulos nativos: fs, path
    ============================================================ */
 
 import qrcode from 'qrcode-terminal';

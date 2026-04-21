@@ -1,13 +1,18 @@
 /* ============================================================
-   server.js
-   Backend completo. Responsabilidades:
-   1. Expone API REST que usa el dashboard
-   2. Supabase solo vive acá — el frontend no sabe que existe
-   3. Scheduler de turnos automáticos
-   4. QR de WhatsApp disponible como endpoint
-   5. Cola espaciada para remarketing (evita ban)
-   6. Logs detallados de errores de Gemini (429/503)
-   7. Registro de turnos procesados en Supabase
+   Este script tiene la funcionalidad de actuar como servidor 
+   backend integrando todos los servicios del bot (WhatsApp, IA, BD)
+   y exponiendo una API REST robusta y autenticada para el Dashboard.
+
+   Funciones:
+   - Arranque del servidor Express con protección CORS, JWT y Rate Limit.
+   - Scheduler de turnos automáticos y lógica de procesamiento de cola (remarketing).
+   - Endpoints para login, métricas, clientes vencidos, QR y estado del bot.
+   - Ejecución de `procesarTurno` delegando al cerebro `procesador.js`.
+   
+   Utilizando las herramientas:
+   - express, cors, jsonwebtoken, express-rate-limit, crypto
+   - @supabase/supabase-js 
+   - Node.js (path, url) 
    ============================================================ */
 
 import express from 'express'; /* express es para crear el servidor*/
