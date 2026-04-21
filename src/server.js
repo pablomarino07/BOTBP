@@ -197,10 +197,9 @@ async function procesarTurno(origen = 'automático') {
 
     if (!historiales.length) {
         console.log('ℹ️  Sin conversaciones acumuladas.');
-        return { ok: true, procesados: 0, pedidos: 0, descartados: 0 };
+    } else {
+        console.log(`📋 ${historiales.length} conversación(es) para analizar\n`);
     }
-
-    console.log(`📋 ${historiales.length} conversación(es) para analizar\n`);
 
     let pedidosGuardados = 0;
     let descartados = 0;
