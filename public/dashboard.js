@@ -239,7 +239,6 @@ async function cargarDatos() {
       let prevUrl = `/metricas?desde=${prevDesde}&hasta=${prevHasta}`;
       p2 = api('GET', prevUrl);
 
-      document.body.classList.add('comparativa-mode');
       const txt = document.getElementById('filtroSelect').options[document.getElementById('filtroSelect').selectedIndex].text;
       const b = document.getElementById('comparativaBanner');
       if (b) {
@@ -247,8 +246,13 @@ async function cargarDatos() {
         b.innerHTML = `<strong>Modo Comparativo:</strong> Analizando ${txt} (${formatoCorta(desde)} - ${formatoCorta(hasta)}) vs. Anterior (${formatoCorta(prevDesde)} - ${formatoCorta(prevHasta)}).`;
       }
     } else {
-      document.body.classList.remove('comparativa-mode');
       if (document.getElementById('comparativaBanner')) document.getElementById('comparativaBanner').style.display = 'none';
+    }
+
+    if (comparar) {
+        document.body.classList.add('comparativa-mode');
+    } else {
+        document.body.classList.remove('comparativa-mode');
     }
 
     const [data1, data2] = p2 ? await Promise.all([p1, p2]) : [await p1, null];
