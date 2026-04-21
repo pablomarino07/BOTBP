@@ -1,4 +1,4 @@
-<div align="center">
+  <div align="center">
   <h1>🍕 Bot BP · Automatización & IA para Pizzerías 🚀</h1>
   <p><i>Un ecosistema inteligente desarrollado en Node.js para revolucionar la toma de pedidos a través de WhatsApp.</i></p>
 

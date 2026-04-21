@@ -5,3 +5,7 @@ node_modules/
 # Sesión y caché de WhatsApp Web (760 MB — no subir a GitHub)
 .wwebjs_auth/
 .wwebjs_cache/
+INICIAR.bat
+MEJORAS_PENDIENTES.md
+DESPLIEGUE_VPS.md
+design-mvps/
