@@ -319,15 +319,13 @@ export function iniciarScheduler() {
             const [hh_num, mm_num] = horaStr.split(':').map(Number);
             const fecha = ahoraArgentina(); /* base en hora Argentina */
             fecha.setHours(hh_num, mm_num, 0, 0);
-            return fecha > ahora ? fecha : null;
-        }).filter(Boolean);
 
-        if (horarios.length === 0) {
-            /* Ambos turnos ya pasaron hoy — esperar 24h y volver a calcular */
-            console.log('⏰ [Scheduler] Ambos turnos del día completados. Próxima revisión en 24h.');
-            schedulerTimeout = setTimeout(proxEjecucion, 24 * 60 * 60 * 1000);
-            return;
-        }
+            /* Si la hora ya pasó hoy (ej. el turno anterior terminó), lo programamos para mañana a la misma hora */
+            if (fecha <= ahora) {
+                fecha.setDate(fecha.getDate() + 1);
+            }
+            return fecha;
+        });
 
         const proxima = Math.min(...horarios.map(f => f - ahora));
         const mins = Math.round(proxima / 60000);
