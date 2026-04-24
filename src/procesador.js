@@ -51,7 +51,7 @@ export async function procesarPedidoDesdeChat(telefono, historialChat, fechaPedi
                 menuData.forEach(item => {
                     const tipo = (item.tipo || 'OTROS').toUpperCase();
                     if (!categorias[tipo]) categorias[tipo] = [];
-                    const prod = item.producto ? item.producto.toLowerCase() : '';
+                    const prod = item.producto ? item.producto : '';
                     const vari = item.variante ? item.variante.toLowerCase() : '';
                     const prec = item.precio ? `$${item.precio}` : '';
                     categorias[tipo].push(`${prod} ${vari} ${prec}`.trim());

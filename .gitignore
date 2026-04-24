@@ -13,3 +13,6 @@ DESPLIEGUE_VPS.md
 
 # Carpetas de diseño o assets pesados
 design-mvps/
+
+# Carpeta para la base de datos
+scratch/

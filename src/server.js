@@ -156,7 +156,10 @@ async function enviarConCola(destinatarios, getMensaje) {
         const dest = lote[i];
         try {
             const mensaje = getMensaje(dest);
-            const numero = (dest.telefono || dest).replace(/\D/g, '') + '@c.us';
+            const telBruto = String(dest.telefono || dest);
+            const numero = telBruto.includes('@lid') 
+                ? telBruto.trim() 
+                : telBruto.replace(/\D/g, '') + '@c.us';
             await client.sendMessage(numero, mensaje);
             enviados++;
             console.log(`   [${i + 1}/${lote.length}] ✅ Enviado a ${dest.nombre || numero}`);
@@ -463,7 +466,10 @@ app.post('/api/enviar-uno', async (req, res) => {
     if (!telefono || !mensaje) return res.status(400).json({ ok: false, error: 'Faltan datos.' });
     if (estadoConexion !== 'conectado') return res.status(503).json({ ok: false, error: 'WhatsApp no conectado.' });
     try {
-        const numero = telefono.replace(/\D/g, '') + '@c.us';
+        const telBruto = String(telefono);
+        const numero = telBruto.includes('@lid') 
+            ? telBruto.trim() 
+            : telBruto.replace(/\D/g, '') + '@c.us';
         await client.sendMessage(numero, mensaje);
         if (clienteId) {
             await supabase.from('clientes').update({ ultimo_remarketing: ahoraArgentina().toISOString() }).eq('id', clienteId);
