@@ -445,6 +445,57 @@ app.get('/api/clientes-vencidos', async (req, res) => {
     }
 });
 
+/* GET /api/clientes-club — para Club Big Pizza: clientes con N+ pedidos en un período */
+app.get('/api/clientes-club', async (req, res) => {
+    const minPedidos = parseInt(req.query.minPedidos) || 3;
+    const { desde, hasta } = req.query;
+
+    try {
+        /* Traemos pedidos del período */
+        let q = supabase
+            .from('pedidos')
+            .select('cliente_id, monto_total');
+        if (desde) q = q.gte('fecha', desde);
+        if (hasta) q = q.lte('fecha', hasta);
+
+        const { data: pedidos, error: errP } = await q;
+        if (errP) throw errP;
+
+        /* Agrupar por cliente y contar pedidos */
+        const conteo = {};
+        for (const p of pedidos) {
+            if (!p.cliente_id) continue;
+            conteo[p.cliente_id] = (conteo[p.cliente_id] || 0) + 1;
+        }
+
+        /* Filtrar los que superan el umbral — cliente_id es UUID (string), NO parseInt */
+        const idsCalificados = Object.entries(conteo)
+            .filter(([, cnt]) => cnt >= minPedidos)
+            .map(([id]) => id);
+
+        if (!idsCalificados.length) {
+            return res.json({ ok: true, clientes: [] });
+        }
+
+        /* Obtener datos de los clientes */
+        const { data: clientes, error: errC } = await supabase
+            .from('clientes')
+            .select('id,nombre,telefono,ultima_compra,ultimo_remarketing')
+            .in('id', idsCalificados);
+        if (errC) throw errC;
+
+        /* Adjuntar total de pedidos y ordenar de mayor a menor */
+        const resultado = clientes.map(c => ({
+            ...c,
+            total_pedidos: conteo[c.id] || 0
+        })).sort((a, b) => b.total_pedidos - a.total_pedidos);
+
+        res.json({ ok: true, clientes: resultado });
+    } catch (e) {
+        res.status(500).json({ ok: false, error: e.message });
+    }
+});
+
 /* GET /api/logs-turnos — historial de turnos procesados */
 app.get('/api/logs-turnos', async (req, res) => {
     try {

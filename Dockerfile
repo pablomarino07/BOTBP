@@ -4,7 +4,15 @@ FROM node:18-bullseye-slim
 # Las bibliotecas son requeridas para whatsapp-web.js / Puppeteer bajo Linux.
 RUN apt-get update && apt-get install -y \
     chromium \
-    fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf libxss1 \
+    fonts-ipafont-gothic fonts-wqy-zenhei fonts-thai-tlwg fonts-kacst fonts-freefont-ttf \
+    libnss3 \
+    libgbm1 \
+    libasound2 \
+    libxss1 \
+    libxtst6 \
+    libxshmfence1 \
+    ca-certificates \
+    fonts-liberation \
     --no-install-recommends \
     && rm -rf /var/lib/apt/lists/*
 

@@ -72,7 +72,47 @@ async function procesarMensaje(msg) {
         if (!msg.body || msg.body.trim() === '') return;
 
         const chatId = msg.fromMe ? msg.to : msg.from;
-        const telefono = chatId.replace(/@c\.us$/, '').replace(/@s\.whatsapp\.net$/, '');
+
+        /* Si el chatId usa @lid (ID interno de WhatsApp para algunos números argentinos),
+           obtenemos el número real desde el contacto para no guardar IDs largos e inútiles */
+        let telefono;
+        if (chatId.includes('@lid')) {
+            try {
+                const contact = await msg.getContact();
+                
+                // 1. Intentamos obtener y limpiar el número estándar
+                const rawNumber = contact.number ? contact.number.replace(/\D/g, '') : '';
+                
+                if (rawNumber.length === 13) {
+                    telefono = rawNumber;
+                } else {
+                    // 2. Fallback: Si no viene un número de 13 dígitos, buscamos en chat.name o contact.pushname.
+                    // Limpiamos todo lo que no sea dígitos.
+                    const chatName = chat.name;
+                    const pushName = contact.pushname;
+                    
+                    const numFromChat = chatName ? chatName.replace(/\D/g, '') : '';
+                    const numFromPush = pushName ? pushName.replace(/\D/g, '') : '';
+                    
+                    if (numFromChat.length === 13) {
+                        telefono = numFromChat;
+                        console.log(`💡 [LID Fallback] Número de 13 dígitos extraído de chat.name: ${telefono}`);
+                    } else if (numFromPush.length === 13) {
+                        telefono = numFromPush;
+                        console.log(`💡 [LID Fallback] Número de 13 dígitos extraído de pushname: ${telefono}`);
+                    } else {
+                        // Si no pudimos encontrar un número de 13 dígitos, guardamos el chatId completo (con @lid) tal cual
+                        telefono = chatId;
+                        console.log(`⚠️ [LID Fallback] No se halló número de 13 dígitos. Guardando chatId original: ${telefono}`);
+                    }
+                }
+            } catch (err) {
+                console.error(`⚠️ [LID Error] Falló getContact para ${chatId}:`, err.message);
+                telefono = chatId;
+            }
+        } else {
+            telefono = chatId.replace(/@c\.us$/, '').replace(/@s\.whatsapp\.net$/, '');
+        }
         const rol = msg.fromMe ? 'Empleado' : 'Cliente';
         const texto = `${rol}: ${msg.body}`;
 

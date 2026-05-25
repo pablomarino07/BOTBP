@@ -27,6 +27,7 @@
       <button class="tab" onclick="cambiarTab('whatsapp',this)">WhatsApp</button>
       <button class="tab" onclick="cambiarTab('turnos',this)">IA-Procesado</button>
       <button class="tab" onclick="cambiarTab('remarketing',this)">Remarketing</button>
+      <button class="tab" onclick="cambiarTab('clubbigpizza',this)" id="tab-clubbigpizza">Club Big Pizza</button>
     </div>
 
     <div class="nav-right">
@@ -400,6 +401,123 @@
       </div>
     </div>
 
+    <!-- ══ CLUB BIG PIZZA ══ -->
+    <div class="page" id="page-clubbigpizza">
+      <div class="page-header">
+        <div class="page-title">Club <span>Big Pizza</span></div>
+        <div class="page-sub">Identificá y premiá a tus clientes más frecuentes con campañas exclusivas</div>
+      </div>
+      <div class="remarketing-layout">
+
+        <!-- Panel izquierdo: Configuración -->
+        <div class="rm-panel">
+          <div class="rm-panel-title">🏆 Club Big Pizza</div>
+
+          <div class="cbp-badge-header">
+            <div class="cbp-badge-icon">🏆</div>
+            <div>
+              <div style="font-size:.85rem;color:var(--text);font-weight:600">Campaña exclusiva</div>
+              <div style="font-size:.72rem;color:var(--muted);margin-top:2px">Para clientes con más pedidos en el período</div>
+            </div>
+          </div>
+
+          <div class="rm-alerta" id="cbpAlerta" style="display:none">
+            ⚠️ WhatsApp no conectado.<br>
+            Vinculá el dispositivo en la tab <strong>WhatsApp</strong>.
+          </div>
+
+          <!-- Período de análisis propio -->
+          <div class="rm-field">
+            <label>Período de análisis</label>
+            <select id="cbpFiltroSelect" class="fm-select" style="width:100%" onchange="cbpCambiarFiltro()">
+              <option value="hoy">Hoy</option>
+              <option value="ayer">Ayer</option>
+              <option value="semana">Últimos 7 días</option>
+              <option value="semana_pasada">Semana anterior</option>
+              <option value="mes" selected>Últimos 30 días</option>
+              <option value="mes_calendario">Este mes</option>
+              <option value="mes_calendario_pasado">Mes pasado</option>
+              <option value="todo">Todo el historial</option>
+              <option value="personalizado">Personalizado...</option>
+            </select>
+          </div>
+
+          <!-- Fechas personalizadas (ocultas por defecto) -->
+          <div class="rm-field" id="cbpRangoPersonalizado" style="display:none">
+            <label>Fechas personalizadas</label>
+            <div class="fm-date-row">
+              <span>Desde</span>
+              <input type="date" class="fm-date" id="cbpFechaDesde" onchange="cargarMiembrosClub()">
+              <span>Hasta</span>
+              <input type="date" class="fm-date" id="cbpFechaHasta" onchange="cargarMiembrosClub()">
+            </div>
+          </div>
+
+          <!-- Filtro de pedidos mínimos -->
+          <div class="rm-field">
+            <label>Mínimo de pedidos en el período</label>
+            <input type="number" id="cbpMinPedidos" value="3" min="1" max="999" oninput="actualizarClub()" />
+            <div class="rm-hint">Clientes con <strong id="cbpMinLabel">3</strong>+ pedidos en el período seleccionado.</div>
+          </div>
+          <div class="rm-counter">
+            <strong id="cbpContador">0</strong>
+            <span>miembros<br>del club</span>
+          </div>
+
+          <hr class="rm-divider">
+
+          <!-- Mensaje -->
+          <div class="rm-field">
+            <label>Mensaje</label>
+            <textarea id="cbpMensaje" placeholder="Hola {nombre}, sos parte del Club Big Pizza! 🏆🍕"
+              oninput="actualizarPreviewClub()"></textarea>
+            <div class="rm-hint">Usá <code>{nombre}</code> para personalizar el saludo.</div>
+          </div>
+          <div class="rm-field">
+            <label>Vista previa</label>
+            <div class="rm-preview" id="cbpPreview">Escribí el mensaje arriba...</div>
+          </div>
+
+          <hr class="rm-divider">
+
+          <!-- Envío -->
+          <div id="cbpFeedback" style="display:none"></div>
+          <div class="rm-progreso" id="cbpProgreso">
+            <div id="cbpProgresoTexto">Enviando...</div>
+            <div class="rm-progreso-bar-wrap">
+              <div class="rm-progreso-bar" id="cbpProgresoBar"></div>
+            </div>
+            <div class="rm-progreso-texto" id="cbpProgresoDetalle"></div>
+          </div>
+          <div class="rm-actions">
+            <button class="btn-green" id="cbpBtnEnviarTodos" onclick="cbpEnviarTodos()" style="width:100%;background:linear-gradient(135deg,#f5631a,#f5c518);color:#000;box-shadow:0 0 20px rgba(245,99,26,.4)">🏆 Enviar a todos los miembros</button>
+          </div>
+        </div>
+
+        <!-- Panel derecho: Lista de miembros -->
+        <div>
+          <div class="vencidos-header">
+            <div class="vencidos-titulo" id="cbpTitulo">Miembros del club</div>
+            <button class="btn-ghost" style="padding:4px 12px;font-size:0.8rem;white-space:nowrap"
+              onclick="cargarMiembrosClub()">🔄 Refrescar</button>
+          </div>
+
+          <!-- Info del período -->
+          <div class="cbp-info-banner" id="cbpInfoBanner">
+            <span style="color:var(--orange)">📅</span>
+            <span id="cbpInfoTexto">Mostrando clientes con <strong id="cbpMinLabel2">3</strong>+ pedidos en <strong id="cbpPeriodoTexto">los últimos 30 días</strong></span>
+          </div>
+
+          <div id="cbpLista">
+            <div class="loading">
+              <div class="spinner"></div> Cargando...
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
   </main>
 
   <!-- ── MODAL ── -->
@@ -416,6 +534,11 @@
   </div>
 
   <script src="dashboard.js"></script>
+  <script src="dashboard-metrics.js"></script>
+  <script src="dashboard-whatsapp.js"></script>
+  <script src="dashboard-ia.js"></script>
+  <script src="dashboard-remarketing.js"></script>
+  <script src="dashboard-clubbigpizza.js"></script>
 
   <footer class="footer">
     <p>Created and designed by <a href="https://www.linkedin.com/in/pablo-mari%C3%B1o-785138236/" target="_blank"
