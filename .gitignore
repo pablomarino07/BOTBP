@@ -5,6 +5,7 @@ node_modules/
 # Sesión y caché de WhatsApp Web (Evita fugas de sesión y peso innecesario)
 .wwebjs_auth/
 .wwebjs_cache/
+.wwebjs_auth_backfill/
 
 # Scripts y Documentación personal
 .INICIAR.bat
